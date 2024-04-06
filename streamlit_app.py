@@ -1,11 +1,12 @@
 import streamlit as st
 import pymysql
 import pandas as pd
-import plotly.express as px  # Make sure to import Plotly Express
+import plotly.express as px
 
+@st.cache(hash_funcs={pymysql.connections.Connection: id}, ttl=600)
 def connect_to_db():
     db_info = st.secrets["connections"]["mysql"]
-    return pymysql.connect(
+    connection = pymysql.connect(
         host=db_info["host"],
         user=db_info["username"],
         password=db_info["password"],
@@ -13,53 +14,48 @@ def connect_to_db():
         charset='utf8mb4',
         cursorclass=pymysql.cursors.DictCursor
     )
+    return connection
 
-def fetch_venues_by_city(city):
+def fetch_data(query, parameters=None):
     connection = connect_to_db()
-    query = f"SELECT * FROM Venues WHERE City = '{city}';"
-    df = pd.read_sql(query, connection)
+    with connection.cursor() as cursor:
+        cursor.execute(query, parameters)
+        result = cursor.fetchall()
     connection.close()
-    return df
+    return pd.DataFrame(result)
 
-def fetch_venues_capacity_over(capacity):
-    connection = connect_to_db()
-    query = f"SELECT * FROM Venues WHERE Capacity > {capacity};"
-    df = pd.read_sql(query, connection)
-    connection.close()
-    return df
-
-def fetch_venues_ordered_by_price():
-    connection = connect_to_db()
-    query = "SELECT * FROM Venues ORDER BY Price_per_hour DESC;"
-    df = pd.read_sql(query, connection)
-    connection.close()
-    return df
-
-def fetch_average_price():
-    connection = connect_to_db()
-    query = "SELECT AVG(Price_per_hour) AS average_price FROM Venues;"
-    df = pd.read_sql(query, connection)
-    connection.close()
-    return df.iloc[0]['average_price']
-
-def fetch_venue_counts_per_city():
-    connection = connect_to_db()
-    query = "SELECT City, COUNT(*) AS venue_count FROM Venues GROUP BY City;"
-    df = pd.read_sql(query, connection)
-    connection.close()
-    return df
-
-# Example of using Plotly for visualization within Streamlit
 def plot_venue_counts_per_city():
-    df = fetch_venue_counts_per_city()
+    query = "SELECT City, COUNT(*) AS venue_count FROM Venues GROUP BY City;"
+    df = fetch_data(query)
     fig = px.bar(df, x='City', y='venue_count', title="Venue Counts per City")
     st.plotly_chart(fig)
 
-# Incorporating into Streamlit interface
-st.title('EventManager')
-st.write("### Venues Ordered by Price Per Hour")
-st.dataframe(fetch_venues_ordered_by_price())
-st.write("### Average Price Per Hour Across All Venues")
-average_price = fetch_average_price()
-st.write(f"Average Price: ${average_price}")
-plot_venue_counts_per_city()
+def app_layout():
+    st.title('EventManager - Explore Venues')
+    
+    with st.sidebar:
+        st.write("## Filters")
+        city = st.text_input("City", "")
+        capacity = st.number_input("Minimum Capacity", min_value=0, value=0)
+        price_range = st.slider("Price Range Per Hour", 0, 500, (50, 300))
+    
+    if st.sidebar.button('Show Venues'):
+        query = '''
+        SELECT * FROM Venues 
+        WHERE (%s = '' OR City = %s) AND 
+              Capacity >= %s AND 
+              Price_per_hour BETWEEN %s AND %s
+        ORDER BY Price_per_hour DESC;
+        '''
+        parameters = (city, city, capacity, price_range[0], price_range[1])
+        venues_df = fetch_data(query, parameters)
+        if not venues_df.empty:
+            st.write("### Venues Matching Criteria")
+            st.dataframe(venues_df)
+        else:
+            st.write("No venues match your criteria.")
+    
+    st.write("### General Venue Insights")
+    plot_venue_counts_per_city()
+
+app_layout()
