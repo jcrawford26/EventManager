@@ -30,7 +30,7 @@ def app_layout():
     with tab1:
         city = st.text_input("City", "")
         capacity = st.number_input("Minimum Capacity", min_value=0, value=0)
-        price_range = st.slider("Price Range Per Hour", 2000, 10000, (4000, 7000))
+        price_range = st.slider("Price Range Per Hour", 1000, 10000, (4000, 7000))
         
         query = '''
         SELECT * FROM Venues 
