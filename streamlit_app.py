@@ -1,22 +1,22 @@
 import streamlit as st
 
-# Access secrets
-mysql_secrets = st.secrets["connections"]["mysql"]
+# Ensure this function is defined in your streamlit_app.py
+def connect_to_db():
+    db_info = st.secrets["connections"]["mysql"]
+    return pymysql.connect(
+        host=db_info["host"],
+        user=db_info["username"],
+        password=db_info["password"],
+        database=db_info["database"],
+        charset='utf8mb4',
+        cursorclass=pymysql.cursors.DictCursor
+    )
 
-dialect = mysql_secrets["dialect"]
-host = mysql_secrets["host"]
-port = mysql_secrets["port"]
-database = mysql_secrets["database"]
-username = mysql_secrets["username"]
-password = mysql_secrets["password"]
-
-# Use these variables to set up your database connection
-
-# Function to fetch data from the database
+# This function depends on the above connect_to_db function
 def fetch_data():
     connection = connect_to_db()
     with connection.cursor() as cursor:
-        query = "SELECT * FROM Venues"  # Replace with your actual table name
+        query = "SELECT * FROM your_table_name"  # Replace with your actual table name
         cursor.execute(query)
         result = cursor.fetchall()
     connection.close()
@@ -30,3 +30,4 @@ if st.button('Show Data'):
         st.write(data_df)
     else:
         st.write("No data found.")
+
