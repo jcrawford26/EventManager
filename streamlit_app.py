@@ -13,22 +13,51 @@ def connect_to_db():
         cursorclass=pymysql.cursors.DictCursor
     )
 
-# This function depends on the above connect_to_db function
-def fetch_data():
+def fetch_venues_by_city(city):
     connection = connect_to_db()
-    with connection.cursor() as cursor:
-        query = "SELECT * FROM Venues"  # Replace with your actual table name
-        cursor.execute(query)
-        result = cursor.fetchall()
+    query = f"SELECT * FROM Venues WHERE City = '{city}';"
+    df = pd.read_sql(query, connection)
     connection.close()
-    return pd.DataFrame(result)
+    return df
 
-# Displaying data in the Streamlit app
-if st.button('Show Data'):
-    st.write('Fetching data from database...')
-    data_df = fetch_data()
-    if not data_df.empty:
-        st.write(data_df)
-    else:
-        st.write("No data found.")
+def fetch_venues_capacity_over(capacity):
+    connection = connect_to_db()
+    query = f"SELECT * FROM Venues WHERE Capacity > {capacity};"
+    df = pd.read_sql(query, connection)
+    connection.close()
+    return df
 
+def fetch_venues_ordered_by_price():
+    connection = connect_to_db()
+    query = "SELECT * FROM Venues ORDER BY Price_per_hour DESC;"
+    df = pd.read_sql(query, connection)
+    connection.close()
+    return df
+
+def fetch_average_price():
+    connection = connect_to_db()
+    query = "SELECT AVG(Price_per_hour) AS average_price FROM Venues;"
+    df = pd.read_sql(query, connection)
+    connection.close()
+    return df.iloc[0]['average_price']
+
+def fetch_venue_counts_per_city():
+    connection = connect_to_db()
+    query = "SELECT City, COUNT(*) AS venue_count FROM Venues GROUP BY City;"
+    df = pd.read_sql(query, connection)
+    connection.close()
+    return df
+
+# Example of using Plotly for visualization within Streamlit
+def plot_venue_counts_per_city():
+    df = fetch_venue_counts_per_city()
+    fig = px.bar(df, x='City', y='venue_count', title="Venue Counts per City")
+    st.plotly_chart(fig)
+
+# Incorporating into Streamlit interface
+st.title('EventManager')
+st.write("### Venues Ordered by Price Per Hour")
+st.dataframe(fetch_venues_ordered_by_price())
+st.write("### Average Price Per Hour Across All Venues")
+st.write(fetch_average_price())
+plot_venue_counts_per_city()
