@@ -3,7 +3,6 @@ import pymysql
 import pandas as pd
 import plotly.express as px
 
-@st.cache(hash_funcs={pymysql.connections.Connection: id}, ttl=600)
 def connect_to_db():
     db_info = st.secrets["connections"]["mysql"]
     connection = pymysql.connect(
@@ -16,12 +15,12 @@ def connect_to_db():
     )
     return connection
 
+@st.cache(hash_funcs={pymysql.connections.Connection: id}, allow_output_mutation=True, ttl=600)
 def fetch_data(query, parameters=None):
-    connection = connect_to_db()
-    with connection.cursor() as cursor:
-        cursor.execute(query, parameters)
-        result = cursor.fetchall()
-    connection.close()
+    with connect_to_db() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, parameters)
+            result = cursor.fetchall()
     return pd.DataFrame(result)
 
 def plot_venue_counts_per_city():
