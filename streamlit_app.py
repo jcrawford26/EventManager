@@ -1,4 +1,6 @@
 import streamlit as st
+import pandas as pd
+import pymysql
 
 # Ensure this function is defined in your streamlit_app.py
 def connect_to_db():
