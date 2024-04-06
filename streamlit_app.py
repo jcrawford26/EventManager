@@ -15,12 +15,12 @@ def connect_to_db():
     )
     return connection
 
-@st.cache(hash_funcs={pymysql.connections.Connection: id}, allow_output_mutation=True, ttl=600)
 def fetch_data(query, parameters=None):
-    with connect_to_db() as connection:
-        with connection.cursor() as cursor:
-            cursor.execute(query, parameters)
-            result = cursor.fetchall()
+    connection = connect_to_db()
+    with connection.cursor() as cursor:
+        cursor.execute(query, parameters)
+        result = cursor.fetchall()
+    connection.close()
     return pd.DataFrame(result)
 
 def plot_venue_counts_per_city():
