@@ -1,8 +1,7 @@
 import streamlit as st
-import pandas as pd
 import pymysql
+import pandas as pd
 
-# Ensure this function is defined in your streamlit_app.py
 def connect_to_db():
     db_info = st.secrets["connections"]["mysql"]
     return pymysql.connect(
@@ -18,7 +17,7 @@ def connect_to_db():
 def fetch_data():
     connection = connect_to_db()
     with connection.cursor() as cursor:
-        query = "SELECT * FROM your_table_name"  # Replace with your actual table name
+        query = "SELECT * FROM Venues"  # Replace with your actual table name
         cursor.execute(query)
         result = cursor.fetchall()
     connection.close()
