@@ -1,6 +1,7 @@
 import streamlit as st
 import pymysql
 import pandas as pd
+import plotly.express as px  # Make sure to import Plotly Express
 
 def connect_to_db():
     db_info = st.secrets["connections"]["mysql"]
@@ -59,5 +60,6 @@ st.title('EventManager')
 st.write("### Venues Ordered by Price Per Hour")
 st.dataframe(fetch_venues_ordered_by_price())
 st.write("### Average Price Per Hour Across All Venues")
-st.write(fetch_average_price())
+average_price = fetch_average_price()
+st.write(f"Average Price: ${average_price}")
 plot_venue_counts_per_city()
