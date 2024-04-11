@@ -3,15 +3,38 @@ import pymysql
 import pandas as pd
 import plotly.express as px
 
-def connect_to_db():
-    db_info = st.secrets["connections"]["mysql"]
-    connection = pymysql.connect(
-        host=db_info["host"],
-        user=db_info["username"],
-        password=db_info["password"],
-        database=db_info["database"],
-        charset='utf8mb4',
-        cursorclass=pymysql.cursors.DictCursor
+db_info = st.secrets["connections"]["mysql"]
+
+# Connection parameters for both databases
+EventManager1_Connection_Params = {
+    'host': 'localhost',
+    'user': 'dsci551',
+    'password': 'Dsci-551',
+    'database': 'Event_Manager1'
+}
+
+EventManager2_Connection_Params = {
+    'host': 'localhost',
+    'user': 'dsci551',
+    'password': 'Dsci-551',
+    'database': 'Event_Manager2'
+}
+
+# List of connection parameters for easy iteration
+db = [EventManager1_Connection_Params['database'], EventManager2_Connection_Params['database']]
+
+def connect_to_db(db):
+    
+    for database in db:
+        try:
+        db_info = st.secrets["connections"]["mysql"]
+        connection = pymysql.connect(
+            host=db_info["host"],
+            user=db_info["username"],
+            password=db_info["password"],
+            database=db_info[db[database]],
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor
     )
     return connection
 
