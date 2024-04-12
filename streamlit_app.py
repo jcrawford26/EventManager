@@ -3,26 +3,14 @@ import pymysql
 import pandas as pd
 import hashlib
 
-# Database configuration for distributed databases
-databases = {
-    'EventManager1': {
-        'host': 'localhost',
-        'user': 'dsci551',
-        'password': 'Dsci-551',
-        'database': 'Event_Manager1'
-    },
-    'EventManager2': {
-        'host': 'localhost',
-        'user': 'dsci551',
-        'password': 'Dsci-551',
-        'database': 'Event_Manager2'
-    }
-}
-
+# Updated connect_to_db function to use Streamlit secrets for database credentials
 def connect_to_db(db_name=None):
+    # Define the list of database keys
+    db_keys = ['EventManager1', 'EventManager2']
     connections = {}
     try:
-        for name, params in databases.items():
+        for key in db_keys:
+            params = st.secrets[key]  # Fetching connection parameters from secrets
             connection = pymysql.connect(
                 host=params['host'],
                 user=params['user'],
@@ -31,13 +19,14 @@ def connect_to_db(db_name=None):
                 charset='utf8mb4',
                 cursorclass=pymysql.cursors.DictCursor
             )
-            connections[name] = connection
+            connections[key] = connection
         if db_name:
             return connections[db_name]
         return connections
     except Exception as e:
         st.error(f"Failed to connect to database: {str(e)}")
 
+# Function to choose the database based on hash of the input string
 def choose_database(input_string):
     hash_object = hashlib.sha256(input_string.encode())
     hash_digest = hash_object.hexdigest()
