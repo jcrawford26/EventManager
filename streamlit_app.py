@@ -5,38 +5,39 @@ import plotly.express as px
 
 db_info = st.secrets["connections"]["mysql"]
 
-# Connection parameters for both databases
-EventManager1_Connection_Params = {
-    'host': 'localhost',
-    'user': 'dsci551',
-    'password': 'Dsci-551',
-    'database': 'Event_Manager1'
+databases = {
+    'EventManager1': {
+        'host': 'localhost',
+        'user': 'dsci551',
+        'password': 'Dsci-551',
+        'database': 'Event_Manager1'
+    },
+    'EventManager2': {
+        'host': 'localhost',
+        'user': 'dsci551',
+        'password': 'Dsci-551',
+        'database': 'Event_Manager2'
+    }
 }
 
-EventManager2_Connection_Params = {
-    'host': 'localhost',
-    'user': 'dsci551',
-    'password': 'Dsci-551',
-    'database': 'Event_Manager2'
-}
-
-# List of connection parameters for easy iteration
-db = [EventManager1_Connection_Params['database'], EventManager2_Connection_Params['database']]
-
-def connect_to_db(db):
-    
-    for database in db:
-        try:
-        db_info = st.secrets["connections"]["mysql"]
-        connection = pymysql.connect(
-            host=db_info["host"],
-            user=db_info["username"],
-            password=db_info["password"],
-            database=db_info[db[database]],
-            charset='utf8mb4',
-            cursorclass=pymysql.cursors.DictCursor
-    )
-    return connection
+def connect_to_db(db_name=None):
+    connections = {}
+    try:
+        for name, params in databases.items():
+            connection = pymysql.connect(
+                host=params['host'],
+                user=params['user'],
+                password=params['password'],
+                database=params['database'],
+                charset='utf8mb4',
+                cursorclass=pymysql.cursors.DictCursor
+            )
+            connections[name] = connection
+        if db_name:
+            return connections[db_name]
+        return connections
+    except Exception as e:
+        st.error(f"Failed to connect to database: {str(e)}")
 
 def fetch_data(query, parameters=None):
     connection = connect_to_db()
