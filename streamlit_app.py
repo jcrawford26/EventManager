@@ -128,6 +128,8 @@ def check_availability(venue_name, date, start_time, end_time):
         if connection:
             connection.close()
 
+import streamlit as st
+
 # Streamlit user interface for the application
 st.title('EventManager - Venue Booking Management System')
 
@@ -142,8 +144,8 @@ with tab1:
         city = st.text_input('City', key='city_add')
         capacity = st.number_input('Capacity', min_value=1, value=1, key='capacity_add')
         price_per_hour = st.number_input('Price Per Hour', min_value=0, format='%d', key='price_add')
-        submitted = st.form_submit_button('Add Venue')
-        if submitted:
+        submit_button = st.form_submit_button('Add Venue')
+        if submit_button:
             add_venue(venue_name, city, capacity, price_per_hour)
             st.success("Venue added successfully!")
             st.experimental_rerun()
@@ -156,8 +158,8 @@ with tab3:
         location = st.text_input('Location', key='location_search')
         price_preference = st.slider('Price Range', 0, 5000, (100, 1000), key='price_search')
         capacity_preference = st.slider('Capacity Range', 1, 10000, (10, 1000), key='capacity_search')
-        submitted = st.form_submit_button('Search Venues')
-        if submitted:
+        search_button = st.form_submit_button('Search Venues')
+        if search_button:
             results = find_venue(search_keyword, location, price_preference, capacity_preference)
             if not results.empty:
                 st.dataframe(results)
@@ -173,21 +175,21 @@ with tab2:
         col1, col2, col3 = st.columns(3)
         client_name = col1.text_input('Client Name', key='client_name_book')
         date = col2.date_input('Date', key='date_book')
-        venue_name = col3.text_input('Venue Name', key='venue_book')
+        venue_name = col3.text_input('Venue Name', key='venue_name_book')
 
         col4, col5 = st.columns([1, 1])
         start_time = col4.time_input('Start Time', key='start_time_book')
         end_time = col5.time_input('End Time', key='end_time_book')
 
-        check_button = st.button('Check Availability', key='check_availability')
+        check_button = st.button('Check Availability', key='check_availability_book')
         if check_button:
             if start_time >= end_time:
                 st.error("End time must be after start time.")
             else:
                 available = check_availability(venue_name, date, start_time, end_time)
                 if available:
-                    st.success('The venue is available for booking. Proceed to create the booking.')
-                    st.session_state['create_enabled'] = True
+                    st.success('The venue is available for booking.')
+                    st.session_state['create_enabled'] = True  # Enable booking creation
                 else:
                     st.error('The venue is not available at the selected time. Please try another time.')
                     st.session_state['create_enabled'] = False
