@@ -135,29 +135,41 @@ st.title('EventManager - Venue Booking Management System')
 tab1, tab3, tab2 = st.tabs(["Add Venue", "Find Venue", "Create Booking"])
 
 with tab1:
+    # Header for the form
+    st.header('Add a New Venue')
+
+    # Use session state to hold form values to prevent them from resetting on reruns
+    if 'venue_name' not in st.session_state:
+        st.session_state['venue_name'] = ''
+        st.session_state['city'] = ''
+        st.session_state['capacity'] = 1
+        st.session_state['price_per_hour'] = 0
+
+    # Create the form for adding a new venue
     with st.form("form_add_venue"):
-        st.header('Add a New Venue')
-        venue_name = st.text_input('Venue Name', key='venue_add')
-        city = st.text_input('City', key='city_add')
-        capacity = st.number_input('Capacity', min_value=1, value=1, key='capacity_add')
-        price_per_hour = st.number_input('Price Per Hour', min_value=0, format='%d', key='price_add')
+        venue_name = st.text_input('Venue Name', value=st.session_state['venue_name'], key='venue_add')
+        city = st.text_input('City', value=st.session_state['city'], key='city_add')
+        capacity = st.number_input('Capacity', min_value=1, value=st.session_state['capacity'], key='capacity_add')
+        price_per_hour = st.number_input('Price Per Hour', min_value=0, value=st.session_state['price_per_hour'], key='price_add')
         submit_button = st.form_submit_button('Add Venue')
 
+    # Check if the submit button was pressed
     if submit_button:
-        # Call the add_venue function which also handles the messaging
-        add_venue(venue_name, city, capacity, price_per_hour)
-        
-        # Clear the form after successful submission by utilizing session state
-        # We delay the rerun to allow messages to show up first
-        if 'form_submitted' not in st.session_state:
-            st.session_state['form_submitted'] = True
+        # Call the add_venue function to try adding the venue
+        venue_added = add_venue(venue_name, city, capacity, price_per_hour)
+
+        # If the venue was successfully added, reset the session state values
+        if venue_added:
+            st.session_state['venue_name'] = ''
+            st.session_state['city'] = ''
+            st.session_state['capacity'] = 1
+            st.session_state['price_per_hour'] = 0
         else:
-            # Reset the form fields after messages have been shown
-            del st.session_state['venue_add']
-            del st.session_state['city_add']
-            del st.session_state['capacity_add']
-            del st.session_state['price_add']
-            st.experimental_rerun()
+            # If there was a duplicate or error, keep the current input for the user to adjust
+            st.session_state['venue_name'] = venue_name
+            st.session_state['city'] = city
+            st.session_state['capacity'] = capacity
+            st.session_state['price_per_hour'] = price_per_hour
 
 # Find Venue
 with tab3:
