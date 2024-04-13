@@ -132,62 +132,62 @@ def check_availability(venue_name, date, start_time, end_time):
 st.title('EventManager - Venue Booking Management System')
 
 # Using tabs for better organization
-tab1, tab2, tab3 = st.tabs(["Add Venue", "Create Booking", "Find Venue"])
+tab1, tab3, tab2 = st.tabs(["Add Venue", "Find Venue", "Create Booking"])
 
 # add venue
 with tab1:
-    st.header('Add a New Venue')
-    venue_name = st.text_input('Venue Name', key='venue_name')
-    city = st.text_input('City', key='city')
-    capacity = st.number_input('Capacity', min_value=1, value=1, key='capacity')
-    price_per_hour = st.number_input('Price Per Hour', min_value=0, format='%d', key='price_per_hour')
-    if st.button('Add Venue', key='add_venue'):
-        add_venue(venue_name, city, capacity, price_per_hour)  # Assuming add_venue function handles exceptions and messages
-
-# create booking
-with tab2:
-    st.header('Create a Booking')
-
-    # Using columns to layout input fields more elegantly
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        client_name = st.text_input('Client Name', key='client_name', help='Enter the full name of the client making the booking.')
-    with col2:
-        date = st.date_input('Date', key='date', help='Select the date for the booking.')
-    with col3:
-        venue_name = st.text_input('Venue Name', key='booking_venue_name', help='Enter the name of the venue you want to book.')
-
-    col4, col5 = st.columns([1, 1])
-    with col4:
-        start_time = st.time_input('Start Time', key='start_time', help='Select the start time for the event.')
-    with col5:
-        end_time = st.time_input('End Time', key='end_time', help='Select the end time for the event.')
-
-    # Button to check availability
-    if st.button('Check Availability', key='check_availability'):
-        if start_time >= end_time:
-            st.error("End time must be after start time.")
-        else:
-            available = check_availability(venue_name, date, start_time, end_time)
-            if available:
-                st.success('The venue is available for booking. You can now create the booking.')
-                st.session_state['create_enabled'] = True  # Enable booking creation
-            else:
-                st.error('The venue is not available at the selected time. Please try another time.')
-                st.session_state['create_enabled'] = False
-
-    # Button to create booking, only enabled if availability is confirmed
-    if st.session_state.get('create_enabled', False):
-        if st.button('Create Booking', key='create_booking'):
-            create_booking(client_name, date, start_time, end_time, venue_name)
+    with st.form("add_venue_form"):
+        st.header('Add a New Venue')
+        venue_name = st.text_input('Venue Name', key='venue_name')
+        city = st.text_input('City', key='city')
+        capacity = st.number_input('Capacity', min_value=1, value=1, key='capacity')
+        price_per_hour = st.number_input('Price Per Hour', min_value=0, format='%d', key='price_per_hour')
+        submit_button = st.form_submit_button('Add Venue')
+        if submit_button:
+            add_venue(venue_name, city, capacity, price_per_hour)
 
 # find venue
 with tab3:
     st.header('Find a Venue')
-    search_keyword = st.text_input('Enter search keyword', key='search')
-    if st.button('Search Venues', key='search_venues'):
-        results = find_venue(search_keyword)
-        if not results.empty:
-            st.dataframe(results)
-        else:
-            st.info('No venues found matching the search criteria.')
+    with st.form("find_venue_form"):
+        search_keyword = st.text_input('Keyword', key='search')
+        location = st.text_input('Location', key='location')
+        price_preference = st.slider('Price Range', 0, 5000, (100, 1000), key='price')
+        capacity_preference = st.slider('Capacity Range', 1, 10000, (10, 1000), key='capacity')
+        submit_button = st.form_submit_button('Search Venues')
+        if submit_button:
+            results = find_venue(search_keyword, location, price_preference, capacity_preference)
+            if not results.empty:
+                st.dataframe(results)
+            else:
+                st.info('No venues found matching the search criteria.')
+
+# create booking
+with tab2:
+    with st.form("create_booking_form"):
+        st.header('Create a Booking')
+
+        # Using columns to layout input fields more elegantly
+        col1, col2, col3 = st.columns(3)
+        client_name = col1.text_input('Client Name', key='client_name')
+        date = col2.date_input('Date', key='date')
+        venue_name = col3.text_input('Venue Name', key='booking_venue_name')
+
+        col4, col5 = st.columns([1, 1])
+        start_time = col4.time_input('Start Time', key='start_time')
+        end_time = col5.time_input('End Time', key='end_time')
+
+        check_button = st.button('Check Availability', key='check_availability')
+        if check_button:
+            if start_time >= end_time:
+                st.error("End time must be after start time.")
+            else:
+                available = check_availability(venue_name, date, start_time, end_time)
+                if available:
+                    st.success('The venue is available for booking.')
+                    create_button = st.button('Create Booking', key='create_booking')
+                    if create_button:
+                        create_booking(client_name, date, start_time, end_time, venue_name)
+                        st.experimental_rerun()
+                else:
+                    st.error('The venue is not available at the selected time. Please try another time.')
