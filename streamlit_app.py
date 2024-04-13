@@ -81,26 +81,45 @@ def create_booking(client_name, date, start_time, end_time, venue_name):
         if connection:
             connection.close()
 
-def find_venue(search_keyword):
-    connections = connect_to_db()
+def find_venue(search_keyword, city):
+    connections = connect_to_db()  # Gets connections for both databases
     results = []
     try:
         for db_name, connection in connections.items():
             if connection:
                 with connection.cursor() as cursor:
-                    cursor.execute(
-                        "SELECT Name, City, Capacity, Price_per_hour FROM Venues WHERE Name LIKE %s",
-                        ('%' + search_keyword + '%',)
-                    )
+                    query = "SELECT Name, City, Capacity, Price_per_hour FROM Venues WHERE Name LIKE %s"
+                    params = ['%' + search_keyword + '%']
+
+                    if city and city != 'All':
+                        query += " AND City = %s"
+                        params.append(city)
+
+                    cursor.execute(query, params)
                     results.extend(cursor.fetchall())
                 connection.close()
     except Exception as e:
         st.error(f"An error occurred while searching for venues: {str(e)}")
+    
     if results:
         return pd.DataFrame(results)
     else:
         st.info("No venues found matching the search criteria.")
         return pd.DataFrame()
+
+def get_cities():
+    connections = connect_to_db()  # This will get connections to both databases
+    cities = set()  # Use a set to avoid duplicate city entries
+    try:
+        for db_name, connection in connections.items():
+            if connection:
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT DISTINCT City FROM Venues ORDER BY City")
+                    cities.update(row['City'] for row in cursor.fetchall())
+                connection.close()
+    except Exception as e:
+        st.error(f"Failed to fetch cities: {str(e)}")
+    return list(sorted(cities))
 
 def check_availability(venue_name, date, start_time, end_time):
     db_name = choose_database(venue_name)
@@ -171,17 +190,19 @@ with tab1:
             st.session_state['capacity'] = capacity
             st.session_state['price_per_hour'] = price_per_hour
 
-# Find Venue
+# find venue
 with tab3:
+    st.header('Find a Venue')
+    
+    cities = get_cities()  # Fetch list of cities from the databases
+
     with st.form("form_find_venue"):
-        st.header('Find a Venue')
         search_keyword = st.text_input('Keyword', key='keyword_find')
-        location = st.text_input('Location', key='location_find')
-        price_preference = st.slider('Price Range', 0, 30000, (4000, 20000), key='price_find')
-        capacity_preference = st.slider('Capacity Range', 100, 100000, (5000, 50000), key='capacity_find')
+        location = st.selectbox('City', ['All'] + cities, key='location_find')
         search_button = st.form_submit_button('Search Venues')
+
         if search_button:
-            results = find_venue(search_keyword, location, price_preference, capacity_preference)
+            results = find_venue(search_keyword, location)
             if not results.empty:
                 st.dataframe(results)
             else:
