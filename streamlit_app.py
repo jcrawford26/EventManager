@@ -154,8 +154,8 @@ with tab3:
         st.header('Find a Venue')
         search_keyword = st.text_input('Keyword', key='keyword_find')
         location = st.text_input('Location', key='location_find')
-        price_preference = st.slider('Price Range', 0, 5000, (100, 1000), key='price_find')
-        capacity_preference = st.slider('Capacity Range', 1, 10000, (10, 1000), key='capacity_find')
+        price_preference = st.slider('Price Range', 0, 30000, (4000, 20000), key='price_find')
+        capacity_preference = st.slider('Capacity Range', 100, 100000, (5000, 50000), key='capacity_find')
         search_button = st.form_submit_button('Search Venues')
         if search_button:
             results = find_venue(search_keyword, location, price_preference, capacity_preference)
