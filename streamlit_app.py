@@ -128,8 +128,6 @@ def check_availability(venue_name, date, start_time, end_time):
         if connection:
             connection.close()
 
-import streamlit as st
-
 # Streamlit user interface for the application
 st.title('EventManager - Venue Booking Management System')
 
@@ -154,10 +152,10 @@ with tab1:
 with tab3:
     with st.form("form_find_venue"):
         st.header('Find a Venue')
-        search_keyword = st.text_input('Keyword', key='keyword_search')
-        location = st.text_input('Location', key='location_search')
-        price_preference = st.slider('Price Range', 0, 5000, (100, 1000), key='price_search')
-        capacity_preference = st.slider('Capacity Range', 1, 10000, (10, 1000), key='capacity_search')
+        search_keyword = st.text_input('Keyword', key='keyword_find')
+        location = st.text_input('Location', key='location_find')
+        price_preference = st.slider('Price Range', 0, 5000, (100, 1000), key='price_find')
+        capacity_preference = st.slider('Capacity Range', 1, 10000, (10, 1000), key='capacity_find')
         search_button = st.form_submit_button('Search Venues')
         if search_button:
             results = find_venue(search_keyword, location, price_preference, capacity_preference)
@@ -168,35 +166,34 @@ with tab3:
 
 # Create Booking
 with tab2:
-    with st.form("form_create_booking"):
-        st.header('Create a Booking')
+    st.header('Create a Booking')
 
-        # Using columns to layout input fields more elegantly
-        col1, col2, col3 = st.columns(3)
-        client_name = col1.text_input('Client Name', key='client_name_book')
-        date = col2.date_input('Date', key='date_book')
-        venue_name = col3.text_input('Venue Name', key='venue_name_book')
+    # Using columns to layout input fields more elegantly
+    col1, col2, col3 = st.columns(3)
+    client_name = col1.text_input('Client Name', key='client_name_book')
+    date = col2.date_input('Date', key='date_book')
+    venue_name = col3.text_input('Venue Name', key='venue_name_book')
 
-        col4, col5 = st.columns([1, 1])
-        start_time = col4.time_input('Start Time', key='start_time_book')
-        end_time = col5.time_input('End Time', key='end_time_book')
+    col4, col5 = st.columns([1, 1])
+    start_time = col4.time_input('Start Time', key='start_time_book')
+    end_time = col5.time_input('End Time', key='end_time_book')
 
-        check_button = st.button('Check Availability', key='check_availability_book')
-        if check_button:
-            if start_time >= end_time:
-                st.error("End time must be after start time.")
-            else:
-                available = check_availability(venue_name, date, start_time, end_time)
-                if available:
-                    st.success('The venue is available for booking.')
-                    st.session_state['create_enabled'] = True  # Enable booking creation
-                else:
-                    st.error('The venue is not available at the selected time. Please try another time.')
-                    st.session_state['create_enabled'] = False
+    if start_time >= end_time:
+        st.error("End time must be after start time.")
 
-        if st.session_state.get('create_enabled', False):
-            create_button = st.form_submit_button('Create Booking')
-            if create_button:
+    if st.button('Check Availability', key='check_availability_book'):
+        available = check_availability(venue_name, date, start_time, end_time)
+        if available:
+            st.success('The venue is available for booking.')
+            st.session_state['create_enabled'] = True  # Enable booking creation
+        else:
+            st.error('The venue is not available at the selected time. Please try another time.')
+            st.session_state['create_enabled'] = False
+
+    if st.session_state.get('create_enabled', False):
+        with st.form("create_booking_form"):
+            submit_create = st.form_submit_button('Create Booking')
+            if submit_create:
                 create_booking(client_name, date, start_time, end_time, venue_name)
                 st.success("Booking created successfully!")
                 st.experimental_rerun()
