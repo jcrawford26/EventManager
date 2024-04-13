@@ -134,6 +134,7 @@ st.title('EventManager - Venue Booking Management System')
 # Using tabs for better organization
 tab1, tab2, tab3 = st.tabs(["Add Venue", "Create Booking", "Find Venue"])
 
+# add venue
 with tab1:
     st.header('Add a New Venue')
     venue_name = st.text_input('Venue Name', key='venue_name')
@@ -143,6 +144,7 @@ with tab1:
     if st.button('Add Venue', key='add_venue'):
         add_venue(venue_name, city, capacity, price_per_hour)  # Assuming add_venue function handles exceptions and messages
 
+# create booking
 with tab2:
     st.header('Create a Booking')
 
@@ -161,17 +163,25 @@ with tab2:
     with col5:
         end_time = st.time_input('End Time', key='end_time', help='Select the end time for the event.')
 
-    # Check availability button with a success or error message
+    # Button to check availability
     if st.button('Check Availability', key='check_availability'):
-        available = check_availability(venue_name, date, start_time, end_time)
-        if available:
-            st.success('The venue is available for booking. You can now create the booking.')
-            # Show create booking button only if the venue is available
-            if st.button('Create Booking', key='create_booking'):
-                create_booking(client_name, date, start_time, end_time, venue_name)
+        if start_time >= end_time:
+            st.error("End time must be after start time.")
         else:
-            st.error('The venue is not available at the selected time. Please try another time.')
+            available = check_availability(venue_name, date, start_time, end_time)
+            if available:
+                st.success('The venue is available for booking. You can now create the booking.')
+                st.session_state['create_enabled'] = True  # Enable booking creation
+            else:
+                st.error('The venue is not available at the selected time. Please try another time.')
+                st.session_state['create_enabled'] = False
 
+    # Button to create booking, only enabled if availability is confirmed
+    if st.session_state.get('create_enabled', False):
+        if st.button('Create Booking', key='create_booking'):
+            create_booking(client_name, date, start_time, end_time, venue_name)
+
+# find venue
 with tab3:
     st.header('Find a Venue')
     search_keyword = st.text_input('Enter search keyword', key='search')
