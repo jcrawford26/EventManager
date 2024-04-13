@@ -134,7 +134,6 @@ st.title('EventManager - Venue Booking Management System')
 # Using tabs for better organization
 tab1, tab3, tab2 = st.tabs(["Add Venue", "Find Venue", "Create Booking"])
 
-# Add Venue
 with tab1:
     with st.form("form_add_venue"):
         st.header('Add a New Venue')
@@ -143,9 +142,21 @@ with tab1:
         capacity = st.number_input('Capacity', min_value=1, value=1, key='capacity_add')
         price_per_hour = st.number_input('Price Per Hour', min_value=0, format='%d', key='price_add')
         submit_button = st.form_submit_button('Add Venue')
-        if submit_button:
-            add_venue(venue_name, city, capacity, price_per_hour)
-            st.success("Venue added successfully!")
+
+    if submit_button:
+        # Call the add_venue function which also handles the messaging
+        add_venue(venue_name, city, capacity, price_per_hour)
+        
+        # Clear the form after successful submission by utilizing session state
+        # We delay the rerun to allow messages to show up first
+        if 'form_submitted' not in st.session_state:
+            st.session_state['form_submitted'] = True
+        else:
+            # Reset the form fields after messages have been shown
+            del st.session_state['venue_add']
+            del st.session_state['city_add']
+            del st.session_state['capacity_add']
+            del st.session_state['price_add']
             st.experimental_rerun()
 
 # Find Venue
