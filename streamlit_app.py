@@ -131,16 +131,15 @@ def get_cities():
 def get_all_venues():
     connections = connect_to_db()  # Make sure this returns a proper connection object
     venues = set()
-        try:
-            for db_name, connection in connections.items():
-                if connection:
-                    with connection.cursor() as cursor:
-                        cursor.execute("SELECT DISTINCT Name FROM Venues ORDER BY Name")
-                        venues.update(row['Name'] for row in cursor.fetchall())
-        except Exception as e:
-            st.error(f"Failed to fetch venues: {str(e)}")
-        finally:
-            connection.close()  # Close the connection properly
+    try:
+        for db_name, connection in connections.items():
+            if connection:
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT DISTINCT Name FROM Venues ORDER BY Name")
+                    venues.update(row['Name'] for row in cursor.fetchall())
+                    connection.close()  # Close the connection properly
+    except Exception as e:
+        st.error(f"Failed to fetch venues: {str(e)}")
     return list(sorted(venues))
 
 def check_availability(venue_name, date, start_time, end_time):
