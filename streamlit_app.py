@@ -55,10 +55,16 @@ def add_venue(venue_name, city, capacity, price_per_hour):
             connection.close()
 
 def create_booking(client_name, date, start_time, end_time, venue_name):
+    print(f"Attempting to create booking for {venue_name} at {date} from {start_time} to {end_time}")
     db_name = choose_database(venue_name)
     connection = connect_to_db(db_name)
+    if connection is None:
+        st.error("Failed to connect to the database.")
+        return
+
     try:
         with connection.cursor() as cursor:
+            # Ensure we are fetching the venue ID correctly
             cursor.execute("SELECT ID FROM Venues WHERE Name = %s", (venue_name,))
             venue_result = cursor.fetchone()
             if venue_result:
@@ -77,7 +83,7 @@ def create_booking(client_name, date, start_time, end_time, venue_name):
             else:
                 st.error(f"Venue '{venue_name}' does not exist.")
     except Exception as e:
-        st.error(f"An error occurred during booking: {str(e)}")
+        st.error(f"An error occurred during booking: {e}")
     finally:
         if connection:
             connection.close()
@@ -158,8 +164,13 @@ def create_booking_tab():
     time_slots = [datetime.combine(date, datetime.strptime(f"{hour}:00", "%H:%M").time()) for hour in range(12, 24)]
     selected_time_slot = st.selectbox('Select a Time Slot', time_slots, format_func=lambda x: x.strftime('%I:%M %p'))
 
-    # Venue name input
-    venue_name = st.text_input('Venue Name', key='venue_name_book')
+    # Venue selection: Choose from a dropdown list or enter manually
+    venue_selection_method = st.radio("Choose the venue by", ["Select from list", "Enter manually"])
+    if venue_selection_method == "Select from list":
+        all_venues = get_all_venues()
+        venue_name = st.selectbox('Select a Venue', all_venues, key='venue_select_book')
+    else:
+        venue_name = st.text_input('Enter Venue Name', key='venue_name_book')
 
     # Check venue availability
     if st.button('Check Availability'):
