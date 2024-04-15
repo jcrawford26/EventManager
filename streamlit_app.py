@@ -148,6 +148,47 @@ def check_availability(venue_name, date, start_time, end_time):
         if connection:
             connection.close()
 
+def create_booking_tab():
+    st.header('Create a Booking')
+
+    # Layout input fields using columns for a clean interface
+    col1, col2, col3 = st.columns(3)
+    client_name = col1.text_input('Client Name', key='client_name_book')
+    date = col2.date_input('Date', key='date_book', min_value=datetime.today(), max_value=datetime.today() + timedelta(days=60))
+    venue_name = col3.text_input('Venue Name', key='venue_name_book')
+
+    # Time slot selection using Streamlit's time_input
+    start_time = st.time_input('Start Time', key='start_time_book')
+    duration_options = {'2 hours': 2, '4 hours': 4, '6 hours': 6}  # Define booking durations
+    duration = st.selectbox('Duration', list(duration_options.keys()), key='duration_book')
+    duration_hours = duration_options[duration]
+    end_time = (datetime.combine(datetime.today(), start_time) + timedelta(hours=duration_hours)).time()
+
+    # Check venue availability
+    if st.button('Check Availability'):
+        # Convert time objects to strings for database queries
+        formatted_start_time = start_time.strftime('%H:%M:%S')
+        formatted_end_time = end_time.strftime('%H:%M:%S')
+        available = check_availability(venue_name, date, formatted_start_time, formatted_end_time)
+        if available:
+            st.success('The venue is available for booking.')
+            # Store booking details in session state for later use
+            st.session_state['booking_details'] = (client_name, venue_name, date, formatted_start_time, formatted_end_time)
+            st.session_state['create_enabled'] = True
+        else:
+            st.error('The venue is not available at the selected time. Please try another time.')
+            st.session_state['create_enabled'] = False
+
+    # Finalize booking if venue is available
+    if st.session_state.get('create_enabled', False):
+        if st.button('Confirm Booking'):
+            client_name, venue_name, date, formatted_start_time, formatted_end_time = st.session_state['booking_details']
+            create_booking(client_name, venue_name, date, formatted_start_time, formatted_end_time)
+            st.success("Booking created successfully!")
+            # Clear session state after successful booking
+            del st.session_state['create_enabled']
+            del st.session_state['booking_details']
+
 # Streamlit user interface for the application
 st.title('EventManager - Venue Booking Management System')
 
@@ -211,38 +252,4 @@ with tab3:
 
 # Create Booking tab in Streamlit
 with tab2:
-    st.header('Create a Booking')
-
-    # Use columns to layout input fields more elegantly
-    col1, col2, col3 = st.columns(3)
-    client_name = col1.text_input('Client Name', key='client_name_book')
-    date = col2.date_input('Date', key='date_book', min_value=datetime.today(), max_value=datetime.today() + timedelta(days=60))
-    venue_name = col3.text_input('Venue Name', key='venue_name_book')
-
-    # Simple time slots selection
-    start_time = st.time_input('Start Time', key='start_time_book')
-    duration_options = {'2 hours': 2, '4 hours': 4, '6 hours': 6}  # Duration options
-    duration = st.selectbox('Duration', list(duration_options.keys()), key='duration_book')
-    duration_hours = duration_options[duration]
-    end_time = (datetime.combine(datetime.today(), start_time) + timedelta(hours=duration_hours)).time()
-
-    # Button to check availability
-    if st.button('Check Availability'):
-        available = check_availability(venue_name, date, start_time, end_time)
-        if available:
-            st.success('The venue is available for booking.')
-            st.session_state['booking_details'] = (client_name, venue_name, date, start_time, end_time)
-            st.session_state['create_enabled'] = True  # Enable booking creation
-        else:
-            st.error('The venue is not available at the selected time. Please try another time.')
-            st.session_state['create_enabled'] = False
-
-    # Button to create booking if available
-    if st.session_state.get('create_enabled', False):
-        if st.button('Confirm Booking'):
-            client_name, venue_name, date, start_time, end_time = st.session_state['booking_details']
-            create_booking(client_name, venue_name, date, start_time, end_time)
-            st.success("Booking created successfully!")
-            # Clear session state after booking
-            del st.session_state['create_enabled']
-            del st.session_state['booking_details']
+    create_booking_tab()
