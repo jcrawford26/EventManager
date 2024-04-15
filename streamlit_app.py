@@ -129,18 +129,19 @@ def get_cities():
     return list(sorted(cities))
 
 def get_all_venues():
-    connection = connect_to_db()
-    stadiums = set()  # Use a set to avoid duplicate stadium entries
-    if connection:
+    connections = connect_to_db()  # Make sure this returns a proper connection object
+    venues = set()
         try:
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT DISTINCT Name FROM Venues WHERE Type='Stadium' ORDER BY Name")
-                stadiums.update(row['Name'] for row in cursor.fetchall())
-        except pymysql.Error as e:
-            st.error(f"Failed to fetch stadiums: {str(e)}")
+            for db_name, connection in connections.items():
+                if connection:
+                    with connection.cursor() as cursor:
+                        cursor.execute("SELECT DISTINCT Name FROM Venues ORDER BY Name")
+                        venues.update(row['Name'] for row in cursor.fetchall())
+        except Exception as e:
+            st.error(f"Failed to fetch venues: {str(e)}")
         finally:
-            connection.close()
-    return list(sorted(stadiums))
+            connection.close()  # Close the connection properly
+    return list(sorted(venues))
 
 def check_availability(venue_name, date, start_time, end_time):
     db_name = choose_database(venue_name)
