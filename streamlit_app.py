@@ -73,7 +73,7 @@ def create_booking(client_name, date, start_time, end_time, venue_name):
                     (venue_id, booking_id)
                 )
                 connection.commit()
-                st.success(f"Booking for '{client_name}' added successfully and linked to venue '{venue_name}'.")
+                st.success(f"Booking for '{client_name}' at '{venue_name}' has been successfully created for {date} from {start_time} to {end_time}.")
             else:
                 st.error(f"Venue '{venue_name}' does not exist.")
     except Exception as e:
@@ -151,41 +151,36 @@ def check_availability(venue_name, date, start_time, end_time):
 def create_booking_tab():
     st.header('Create a Booking')
 
-    # Layout input fields using columns for a clean interface
-    col1, col2, col3 = st.columns(3)
-    client_name = col1.text_input('Client Name', key='client_name_book')
-    date = col2.date_input('Date', key='date_book', min_value=datetime.today(), max_value=datetime.today() + timedelta(days=60))
-    venue_name = col3.text_input('Venue Name', key='venue_name_book')
+    # Date selection at the top
+    date = st.date_input('Date', key='date_book', min_value=datetime.today(), max_value=datetime.today() + timedelta(days=60))
 
-    # Time slot selection using Streamlit's time_input
-    start_time = st.time_input('Start Time', key='start_time_book')
-    duration_options = {'2 hours': 2, '4 hours': 4, '6 hours': 6}  # Define booking durations
-    duration = st.selectbox('Duration', list(duration_options.keys()), key='duration_book')
-    duration_hours = duration_options[duration]
-    end_time = (datetime.combine(datetime.today(), start_time) + timedelta(hours=duration_hours)).time()
+    # Time slot selection, from 12 PM to 11 PM in one-hour increments
+    time_slots = [datetime.combine(date, datetime.strptime(f"{hour}:00", "%H:%M").time()) for hour in range(12, 24)]
+    selected_time_slot = st.selectbox('Select a Time Slot', time_slots, format_func=lambda x: x.strftime('%I:%M %p'))
+
+    # Venue name input
+    venue_name = st.text_input('Venue Name', key='venue_name_book')
 
     # Check venue availability
     if st.button('Check Availability'):
-        # Convert time objects to strings for database queries
-        formatted_start_time = start_time.strftime('%H:%M:%S')
-        formatted_end_time = end_time.strftime('%H:%M:%S')
+        formatted_start_time = selected_time_slot.strftime('%H:%M:%S')
+        formatted_end_time = (selected_time_slot + timedelta(hours=1)).strftime('%H:%M:%S')
         available = check_availability(venue_name, date, formatted_start_time, formatted_end_time)
         if available:
             st.success('The venue is available for booking.')
-            # Store booking details in session state for later use
-            st.session_state['booking_details'] = (client_name, venue_name, date, formatted_start_time, formatted_end_time)
+            st.session_state['booking_details'] = (venue_name, date, formatted_start_time, formatted_end_time)
             st.session_state['create_enabled'] = True
         else:
             st.error('The venue is not available at the selected time. Please try another time.')
             st.session_state['create_enabled'] = False
 
-    # Finalize booking if venue is available
+    # Prompt for client name and finalize booking if venue is available
     if st.session_state.get('create_enabled', False):
+        client_name = st.text_input('Client Name', key='client_name_book')
         if st.button('Confirm Booking'):
-            client_name, venue_name, date, formatted_start_time, formatted_end_time = st.session_state['booking_details']
+            venue_name, date, formatted_start_time, formatted_end_time = st.session_state['booking_details']
             create_booking(client_name, venue_name, date, formatted_start_time, formatted_end_time)
             st.success("Booking created successfully!")
-            # Clear session state after successful booking
             del st.session_state['create_enabled']
             del st.session_state['booking_details']
 
