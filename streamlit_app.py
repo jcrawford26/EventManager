@@ -174,10 +174,28 @@ def create_booking_tab():
     # Date selection at the top
     date = st.date_input('Date', key='date_book', min_value=datetime.today(), max_value=datetime.today() + timedelta(days=60))
 
-    # Time selection: Ensure only 12 PM to 11 PM is available
-    time_options = [datetime.strptime(f"{hour}:00 PM", "%I:%M %p").time() for hour in range(1,11)]
-    start_time = st.selectbox('Start Time', time_options, format_func=lambda x: x.strftime('%I:%M %p'), key='start_time_book')
-    end_time = st.selectbox('End Time', time_options, format_func=lambda x: x.strftime('%I:%M %p'), key='end_time_book')
+    # Generating time options from 1 PM to 11 PM
+    time_options = [datetime.strptime(f"{hour}:00 PM", "%I:%M %p").time() for hour in range(1, 12)]
+    
+    # Find the default times' indices
+    default_start_index = time_options.index(datetime.strptime("01:00 PM", "%I:%M %p").time())
+    default_end_index = time_options.index(datetime.strptime("02:00 PM", "%I:%M %p").time())
+
+    # Setting up selectboxes for start and end times
+    start_time = st.selectbox(
+        'Start Time', 
+        time_options, 
+        index=default_start_index,  # Setting default start time at 1 PM
+        format_func=lambda x: x.strftime('%I:%M %p'), 
+        key='start_time_book'
+    )
+    end_time = st.selectbox(
+        'End Time', 
+        time_options, 
+        index=default_end_index,  # Setting default end time at 2 PM
+        format_func=lambda x: x.strftime('%I:%M %p'), 
+        key='end_time_book'
+    )
 
     # Ensure start time is before end time
     if start_time >= end_time:
