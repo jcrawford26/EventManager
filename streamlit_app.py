@@ -204,7 +204,7 @@ def create_booking_tab():
         client_name = st.text_input('Client Name', key='client_name_book')
         if st.button('Confirm Booking'):
             venue_name, date, formatted_start_time, formatted_end_time = st.session_state['booking_details']
-            create_booking(client_name, venue_name, date, formatted_start_time, formatted_end_time)
+            create_booking(client_name, date, formatted_start_time, formatted_end_time, venue_name)
             st.success("Booking created successfully!")
             del st.session_state['create_enabled']
             del st.session_state['booking_details']
