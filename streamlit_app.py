@@ -203,32 +203,32 @@ def create_booking_tab():
     venue_name = st.selectbox('Select a Venue', all_venues, key='venue_select_book')
 
     # Check venue availability
-if st.button('Check Availability'):
-    formatted_start_time = start_time.strftime('%H:%M:%S')
-    formatted_end_time = end_time.strftime('%H:%M:%S')
-    available = check_availability(venue_name, date, formatted_start_time, formatted_end_time)
-    if available:
-        st.success('The venue is available for booking.')
-        hourly_rate = get_venue_hourly_rate(venue_name)  # Fetch the hourly rate
-        hours_diff = (end_time.hour - start_time.hour) + ((end_time.minute - start_time.minute) / 60)
-        total_cost = hourly_rate * hours_diff
-        st.session_state['booking_details'] = (venue_name, date, formatted_start_time, formatted_end_time, total_cost)
-        st.session_state['create_enabled'] = True
-        st.write(f"Estimated total cost: ${total_cost:.2f}")
-    else:
-        st.error('The venue is not available at the selected time. Please try another time.')
-        st.session_state['create_enabled'] = False
+    if st.button('Check Availability'):
+        formatted_start_time = start_time.strftime('%H:%M:%S')
+        formatted_end_time = end_time.strftime('%H:%M:%S')
+        available = check_availability(venue_name, date, formatted_start_time, formatted_end_time)
+        if available:
+            st.success('The venue is available for booking.')
+            hourly_rate = get_venue_hourly_rate(venue_name)  # Fetch the hourly rate
+            hours_diff = (end_time.hour - start_time.hour) + ((end_time.minute - start_time.minute) / 60)
+            total_cost = hourly_rate * hours_diff
+            st.session_state['booking_details'] = (venue_name, date, formatted_start_time, formatted_end_time, total_cost)
+            st.session_state['create_enabled'] = True
+            st.write(f"Estimated total cost: ${total_cost:.2f}")
+        else:
+            st.error('The venue is not available at the selected time. Please try another time.')
+            st.session_state['create_enabled'] = False
 
-# Proceed to confirm booking if available
-if st.session_state.get('create_enabled', False):
-    client_name = st.text_input('Client Name', key='client_name_book')
-    if st.button('Confirm Booking'):
-        venue_name, date, formatted_start_time, formatted_end_time, total_cost = st.session_state['booking_details']
-        create_booking(client_name, venue_name, date, formatted_start_time, formatted_end_time)
-        st.success("Booking created successfully!")
-        st.write(f"The total cost of the booking was: ${total_cost:.2f}")
-        del st.session_state['create_enabled']
-        del st.session_state['booking_details']
+    # Proceed to confirm booking if available
+    if st.session_state.get('create_enabled', False):
+        client_name = st.text_input('Client Name', key='client_name_book')
+        if st.button('Confirm Booking'):
+            venue_name, date, formatted_start_time, formatted_end_time, total_cost = st.session_state['booking_details']
+            create_booking(client_name, venue_name, date, formatted_start_time, formatted_end_time)
+            st.success("Booking created successfully!")
+            st.write(f"The total cost of the booking was: ${total_cost:.2f}")
+            del st.session_state['create_enabled']
+            del st.session_state['booking_details']
 
 
 # Streamlit user interface for the application
