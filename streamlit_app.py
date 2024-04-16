@@ -225,12 +225,53 @@ def create_booking_tab():
             del st.session_state['create_enabled']
             del st.session_state['booking_details']
 
+def fetch_crm_data():
+    connections = connect_to_db()  # This should return a dictionary of connections for all databases
+    results = []
+    try:
+        for db_name, connection in connections.items():
+            if connection:
+                with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+                    cursor.execute("""
+                        SELECT 
+                            b.Client_name AS Name,
+                            COUNT(*) AS Booking_Count,
+                            SUM(v.Price_per_hour * TIMESTAMPDIFF(HOUR, b.Start_time, b.End_time)) AS Total_Spend,
+                            (SELECT v2.Name FROM Venues v2 
+                             JOIN VenueUsed vu ON v2.ID = vu.VenueID
+                             JOIN Bookings b2 ON vu.BookingID = b2.ID
+                             WHERE b2.Client_name = b.Client_name
+                             GROUP BY v2.Name
+                             ORDER BY COUNT(*) DESC
+                             LIMIT 1) AS Most_Frequent_Venue
+                        FROM 
+                            Bookings b
+                        JOIN 
+                            VenueUsed vu ON b.ID = vu.BookingID
+                        JOIN 
+                            Venues v ON vu.VenueID = v.ID
+                        GROUP BY 
+                            b.Client_name
+                    """)
+                    results.extend(cursor.fetchall())
+    except Exception as e:
+        st.error(f"Failed to fetch CRM data across databases: {str(e)}")
+    finally:
+        for connection in connections.values():
+            if connection:
+                connection.close()
+
+    if results:
+        return pd.DataFrame(results)
+    else:
+        return pd.DataFrame()  # Return an empty DataFrame if there are issues or no data
+
 
 # Streamlit user interface for the application
 st.title('EventManager - Venue Booking Management System')
 
 # Using tabs for better organization
-tab1, tab3, tab2 = st.tabs(["Add Venue", "Find Venue", "Create Booking"])
+tab1, tab2, tab3, tab4 = st.tabs(["Add Venue", "Find Venue", "Create Booking", "CRM"])
 
 with tab1:
     # Header for the form
@@ -270,7 +311,7 @@ with tab1:
             st.session_state['price_per_hour'] = price_per_hour
 
 # find venue
-with tab3:
+with tab2:
     st.header('Find a Venue')
     
     cities = get_cities()  # Fetch list of cities from the databases
@@ -288,5 +329,13 @@ with tab3:
                 st.info('No venues found matching the search criteria.')
 
 # Create Booking tab in Streamlit
-with tab2:
+with tab3:
     create_booking_tab()
+
+with tab4:
+    st.header("Customer Relationship Management")
+    crm_data = fetch_crm_data()
+    if not crm_data.empty:
+        st.dataframe(crm_data)
+    else:
+        st.write("No CRM data available.")
