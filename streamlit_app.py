@@ -55,17 +55,12 @@ def add_venue(venue_name, city, capacity, price_per_hour):
             connection.close()
 
 def create_booking(client_name, date, start_time, end_time, venue_name):
-    print(f"Attempting to create booking for {venue_name} at {date} from {start_time} to {end_time}")
     db_name = choose_database(venue_name)
     connection = connect_to_db(db_name)
-    if connection is None:
-        st.error("Failed to connect to the database.")
-        return
-
     try:
         with connection.cursor() as cursor:
             # Ensure we are fetching the venue ID correctly
-            cursor.execute("SELECT ID FROM Venues WHERE Name = %s", (venue_name,))
+            cursor.execute("SELECT ID FROM Venues WHERE LOWER(Name) = LOWER(%s)", (venue_name,))
             venue_result = cursor.fetchone()
             if venue_result:
                 venue_id = venue_result['ID']
@@ -83,7 +78,7 @@ def create_booking(client_name, date, start_time, end_time, venue_name):
             else:
                 st.error(f"Venue '{venue_name}' does not exist.")
     except Exception as e:
-        st.error(f"An error occurred during booking: {e}")
+        st.error(f"An error occurred during booking: {str(e)}")
     finally:
         if connection:
             connection.close()
@@ -224,6 +219,7 @@ def create_booking_tab():
         client_name = st.text_input('Client Name', key='client_name_book')
         if st.button('Confirm Booking'):
             venue_name, date, formatted_start_time, formatted_end_time, total_cost = st.session_state['booking_details']
+            st.write(f"Debug: Venue Name - '{venue_name}'")  # Debug print to check the actual venue name being used
             create_booking(client_name, date, formatted_start_time, formatted_end_time, venue_name)
             st.write(f"The total cost of the booking was: ${total_cost:.2f}")
             del st.session_state['create_enabled']
