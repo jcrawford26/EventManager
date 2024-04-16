@@ -175,7 +175,7 @@ def create_booking_tab():
     date = st.date_input('Date', key='date_book', min_value=datetime.today(), max_value=datetime.today() + timedelta(days=60))
 
     # Time selection: Ensure only 12 PM to 11 PM is available
-    time_options = [datetime.strptime(f"{hour}:00 PM", "%I:%M %p").time() for hour in range(12,1)]
+    time_options = [datetime.strptime(f"{hour}:00 PM", "%I:%M %p").time() for hour in range(1,11)]
     start_time = st.selectbox('Start Time', time_options, format_func=lambda x: x.strftime('%I:%M %p'), key='start_time_book')
     end_time = st.selectbox('End Time', time_options, format_func=lambda x: x.strftime('%I:%M %p'), key='end_time_book')
 
