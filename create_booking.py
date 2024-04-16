@@ -94,8 +94,7 @@ def create_booking(client_name, date, start_time, end_time, venue_name):
 if __name__ == "__main__":
     if len(sys.argv) == 6:
         # Extracting command line arguments
-        client_name, date, start_time, end_time, venue_name = sys.argv[1:5]
-        venue_name = ' '.join(sys.argv[5:])
+        client_name, date, start_time, end_time, venue_name = sys.argv[1:]
         # Call the create_booking function with the provided arguments
         create_booking(client_name, date, start_time, end_time, venue_name)
     else:
