@@ -174,17 +174,19 @@ def create_booking_tab():
     # Date selection at the top
     date = st.date_input('Date', key='date_book', min_value=datetime.today(), max_value=datetime.today() + timedelta(days=60))
 
-    # Start and End time selection
-    start_time = st.time_input('Start Time', key='start_time_book', value=datetime.strptime("12:00", "%H:%M").time())
-    end_time = st.time_input('End Time', key='end_time_book', value=datetime.strptime("13:00", "%H:%M").time())
+    # Time selection: Ensure only 12 PM to 11 PM is available
+    time_options = [datetime.strptime(f"{hour}:00 PM", "%I:%M %p").time() for hour in range(12, 24)]
+    start_time = st.selectbox('Start Time', time_options, format_func=lambda x: x.strftime('%I:%M %p'), key='start_time_book')
+    end_time = st.selectbox('End Time', time_options, format_func=lambda x: x.strftime('%I:%M %p'), key='end_time_book')
 
-    # Ensuring start time is before end time
+    # Ensure start time is before end time
     if start_time >= end_time:
         st.error('End time must be later than start time.')
         return
 
-    # Venue selection: combining dropdown and manual input
-    venue_name = st.text_input('Select or enter a Venue', key='venue_name_book')
+    # Venue selection from a dropdown list of available venues
+    all_venues = get_all_venues()  # Assuming get_all_venues() returns a list of venue names
+    venue_name = st.selectbox('Select a Venue', all_venues, key='venue_select_book')
 
     # Check venue availability
     if st.button('Check Availability'):
