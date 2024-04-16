@@ -174,22 +174,22 @@ def create_booking_tab():
     # Date selection at the top
     date = st.date_input('Date', key='date_book', min_value=datetime.today(), max_value=datetime.today() + timedelta(days=60))
 
-    # Time slot selection, from 12 PM to 11 PM in one-hour increments
-    time_slots = [datetime.combine(date, datetime.strptime(f"{hour}:00", "%H:%M").time()) for hour in range(12, 24)]
-    selected_time_slot = st.selectbox('Select a Time Slot', time_slots, format_func=lambda x: x.strftime('%I:%M %p'))
+    # Start and End time selection
+    start_time = st.time_input('Start Time', key='start_time_book', value=datetime.strptime("12:00", "%H:%M").time())
+    end_time = st.time_input('End Time', key='end_time_book', value=datetime.strptime("13:00", "%H:%M").time())
 
-    # Venue selection: Choose from a dropdown list or enter manually
-    venue_selection_method = st.radio("Choose the venue by", ["Select from list", "Enter manually"])
-    if venue_selection_method == "Select from list":
-        all_venues = get_all_venues()
-        venue_name = st.selectbox('Select a Venue', all_venues, key='venue_select_book')
-    else:
-        venue_name = st.text_input('Enter Venue Name', key='venue_name_book')
+    # Ensuring start time is before end time
+    if start_time >= end_time:
+        st.error('End time must be later than start time.')
+        return
+
+    # Venue selection: combining dropdown and manual input
+    venue_name = st.text_input('Select or enter a Venue', key='venue_name_book')
 
     # Check venue availability
     if st.button('Check Availability'):
-        formatted_start_time = selected_time_slot.strftime('%H:%M:%S')
-        formatted_end_time = (selected_time_slot + timedelta(hours=1)).strftime('%H:%M:%S')
+        formatted_start_time = start_time.strftime('%H:%M:%S')
+        formatted_end_time = end_time.strftime('%H:%M:%S')
         available = check_availability(venue_name, date, formatted_start_time, formatted_end_time)
         if available:
             st.success('The venue is available for booking.')
@@ -204,7 +204,7 @@ def create_booking_tab():
         client_name = st.text_input('Client Name', key='client_name_book')
         if st.button('Confirm Booking'):
             venue_name, date, formatted_start_time, formatted_end_time = st.session_state['booking_details']
-            create_booking(client_name, date, formatted_start_time, formatted_end_time, venue_name)
+            create_booking(client_name, venue_name, date, formatted_start_time, formatted_end_time)
             st.success("Booking created successfully!")
             del st.session_state['create_enabled']
             del st.session_state['booking_details']
