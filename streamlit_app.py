@@ -211,7 +211,7 @@ def create_booking_tab():
             st.success('The venue is available for booking.')
             hourly_rate = get_venue_hourly_rate(venue_name)  # Fetch the hourly rate
             hours_diff = (end_time.hour - start_time.hour) + ((end_time.minute - start_time.minute) / 60)
-            total_cost = hourly_rate * hours_diff
+            total_cost = float(hourly_rate) * hours_diff
             st.session_state['booking_details'] = (venue_name, date, formatted_start_time, formatted_end_time, total_cost)
             st.session_state['create_enabled'] = True
             st.write(f"Estimated total cost: ${total_cost:.2f}")
