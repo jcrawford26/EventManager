@@ -304,7 +304,7 @@ def mass_add_venues(venues):
 st.title('EventManager - Venue Booking Management System')
 
 # Using tabs for better organization
-tab1, tab2, tab3, tab4 = st.tabs(["Find Venue", "Create Booking", "Admin"])
+tab1, tab2, tab3 = st.tabs(["Find Venue", "Create Booking", "Admin"])
 
 # find venue
 with tab1:
