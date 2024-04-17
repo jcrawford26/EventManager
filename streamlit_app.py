@@ -324,7 +324,7 @@ def execute_custom_query(sql_query):
 st.title('EventManager - Venue Booking Management System')
 
 # Using tabs for better organization
-tab1, tab2, tab3 = st.tabs(["Find Venue", "Create Booking", "Admin"])
+tab1, tab2 = st.tabs(["User", "Admin"])
 
 # find venue
 with tab1:
@@ -343,14 +343,12 @@ with tab1:
                 st.dataframe(results)
             else:
                 st.info('No venues found matching the search criteria.')
+    
     create_booking_tab()
 
-# Create Booking tab in Streamlit
-with tab2:
-    st.header("Create a booking")
     
 # Admin tab in Streamlit
-with tab3:
+with tab2:
     st.header('Add a venue')
     
     # Venue adding form under Admin
