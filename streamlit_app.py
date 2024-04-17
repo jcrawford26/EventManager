@@ -270,10 +270,32 @@ def fetch_crm_data():
 st.title('EventManager - Venue Booking Management System')
 
 # Using tabs for better organization
-tab1, tab2, tab3, tab4 = st.tabs(["Add Venue", "Find Venue", "Create Booking", "Admin"])
+user_tab, admin_tab = st.tabs(["User", "Admin"])
 
-with tab1:
-    # Header for the form
+with user_tab:
+    find_tab, create_booking_tab = st.tabs(["Find Venue", "Create Booking"])
+
+    with find_tab:
+        st.header('Find a Venue')
+        
+        cities = get_cities()  # Fetch list of cities from the databases
+
+        with st.form("form_find_venue"):
+            search_keyword = st.text_input('Keyword', key='keyword_find')
+            location = st.selectbox('City', ['All'] + cities, key='location_find')
+            search_button = st.form_submit_button('Search Venues')
+
+            if search_button:
+                results = find_venue(search_keyword, location)
+                if not results.empty:
+                    st.dataframe(results)
+                else:
+                    st.info('No venues found matching the search criteria.')
+
+    with create_booking_tab:
+        create_booking_tab()  # Your existing function to handle booking creation.
+
+with admin_tab:
     st.header('Add a New Venue')
 
     # Use session state to hold form values to prevent them from resetting on reruns
@@ -308,30 +330,5 @@ with tab1:
             st.session_state['city'] = city
             st.session_state['capacity'] = capacity
             st.session_state['price_per_hour'] = price_per_hour
-
-# find venue
-with tab2:
-    st.header('Find a Venue')
-    
-    cities = get_cities()  # Fetch list of cities from the databases
-
-    with st.form("form_find_venue"):
-        search_keyword = st.text_input('Keyword', key='keyword_find')
-        location = st.selectbox('City', ['All'] + cities, key='location_find')
-        search_button = st.form_submit_button('Search Venues')
-
-        if search_button:
-            results = find_venue(search_keyword, location)
-            if not results.empty:
-                st.dataframe(results)
-            else:
-                st.info('No venues found matching the search criteria.')
-
-# Create Booking tab in Streamlit
-with tab3:
-    create_booking_tab()
-
-with tab4:
-    st.header("Title")
 
 
