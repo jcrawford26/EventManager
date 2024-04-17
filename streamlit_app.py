@@ -343,10 +343,10 @@ with tab1:
                 st.dataframe(results)
             else:
                 st.info('No venues found matching the search criteria.')
+    create_booking_tab()
 
 # Create Booking tab in Streamlit
 with tab2:
-    create_booking_tab()
 
 # Admin tab in Streamlit
 with tab3:
