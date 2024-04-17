@@ -367,14 +367,14 @@ with tab3:
 
 with tab4:
     with st.expander("Developer Mode"):
-    st.write("Mass insert venues")
-    uploaded_file = st.file_uploader("Choose a file")
-    if uploaded_file:
-        df = pd.read_csv(uploaded_file)
-        venues = df.to_dict('records')  # Convert DataFrame to list of dicts
-        if st.button('Upload Venues'):
-            results = mass_add_venues(venues)
-            for db_result in results:
-                st.write(results[db_result])
+        st.write("Mass insert venues")
+        uploaded_file = st.file_uploader("Choose a file")
+        if uploaded_file:
+            df = pd.read_csv(uploaded_file)
+            venues = df.to_dict('records')  # Convert DataFrame to list of dicts
+            if st.button('Upload Venues'):
+                results = mass_add_venues(venues)
+                for db_result in results:
+                    st.write(results[db_result])
 
 
