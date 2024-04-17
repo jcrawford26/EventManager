@@ -171,76 +171,23 @@ def get_venue_hourly_rate(venue_name):
         return venue_details.iloc[0]['Price_per_hour']
     return 0
 
-def create_booking_tab():
-    st.header('Create a Booking')
-
-    # Date selection at the top
-    date = st.date_input('Date', key='date_book', min_value=datetime.today(), max_value=datetime.today() + timedelta(days=60))
-
-    # Generating time options from 1 PM to 11 PM
-    time_options = [datetime.strptime(f"{hour}:00 PM", "%I:%M %p").time() for hour in range(1, 12)]
-    
-    # Setting default start and end times based on typical business logic
-    default_start_index = time_options.index(datetime.strptime("01:00 PM", "%I:%M %p").time())
-    default_end_index = time_options.index(datetime.strptime("02:00 PM", "%I:%M %p").time())
-
-    # Selectboxes for start and end times
-    start_time = st.selectbox('Start Time', time_options, index=default_start_index, format_func=lambda x: x.strftime('%I:%M %p'), key='start_time_book')
-    end_time = st.selectbox('End Time', time_options, index=default_end_index, format_func=lambda x: x.strftime('%I:%M %p'), key='end_time_book')
-
-    # Ensure start time is before end time
-    if start_time >= end_time:
-        st.error('End time must be later than start time.')
-        return  # Early return to prevent further processing
-
-    # Venue selection from a dropdown list of available venues
-    all_venues = get_all_venues()  # Fetch the list of venues from your function
-    venue_name = st.selectbox('Select a Venue', all_venues, key='venue_select_book')
-
-    # Check venue availability
-    if st.button('Check Availability'):
-        formatted_start_time = start_time.strftime('%H:%M:%S')
-        formatted_end_time = end_time.strftime('%H:%M:%S')
-        available = check_availability(venue_name, date, formatted_start_time, formatted_end_time)
-        if available:
-            st.success('The venue is available for booking.')
-            hourly_rate = get_venue_hourly_rate(venue_name)  # Fetch the hourly rate
-            hours_diff = (end_time.hour - start_time.hour) + ((end_time.minute - start_time.minute) / 60)
-            total_cost = float(hourly_rate) * hours_diff
-            st.session_state['booking_details'] = (venue_name, date, formatted_start_time, formatted_end_time, total_cost)
-            st.session_state['create_enabled'] = True
-            st.write(f"Estimated total cost: ${total_cost:.2f}")
-        else:
-            st.error('The venue is not available at the selected time. Please try another time.')
-            st.session_state['create_enabled'] = False
-
-    # Proceed to confirm booking if available
-    if st.session_state.get('create_enabled', False):
-        client_name = st.text_input('Client Name', key='client_name_book')
-        if st.button('Confirm Booking'):
-            venue_name, date, formatted_start_time, formatted_end_time, total_cost = st.session_state['booking_details']
-            # st.write(f"Debug: Venue Name - '{venue_name}'")  # Debug print to check the actual venue name being used
-            create_booking(client_name, date, formatted_start_time, formatted_end_time, venue_name)
-            st.write(f"The total cost of the booking was: ${total_cost:.2f}")
-            del st.session_state['create_enabled']
-            del st.session_state['booking_details']
-
 
 # Streamlit user interface for the application
 st.title('EventManager - Venue Booking Management System')
 
 # Define two main tabs: User and Admin
-user_tab, admin_tab = st.tabs(["User", "Admin"])
+tabs = st.tabs(["User", "Admin"])
 
-# In the User tab, we will have sub-tabs for Find Venue and Create Booking
-with user_tab:
-    find_venue_tab, create_booking_tab = st.tabs(["Find Venue", "Create Booking"])
-    
-    with find_venue_tab:
+# User tab with sub-tabs for finding venues and creating bookings
+with tabs[0]:
+    user_tabs = st.tabs(["Find Venue", "Create Booking"])
+
+    # Find Venue tab
+    with user_tabs[0]:
         st.header('Find a Venue')
         cities = get_cities()  # Fetch list of cities from the databases
         
-        with st.form("form_find_venue"):
+        with st.form("find_venue_form"):
             search_keyword = st.text_input('Keyword', key='keyword_find')
             location = st.selectbox('City', ['All'] + cities, key='location_find')
             search_button = st.form_submit_button('Search Venues')
@@ -251,35 +198,33 @@ with user_tab:
                     st.dataframe(results)
                 else:
                     st.info('No venues found matching the search criteria.')
-    
-    with create_booking_tab:
-        st.header('Create a Booking')
-        # Your existing create_booking_tab function logic here.
-        create_booking_tab()  # Call the create booking tab logic to handle bookings.
 
-# In the Admin tab, include functionality to add venues
-with admin_tab:
+    # Create Booking tab
+    with user_tabs[1]:
+        st.header('Create a Booking')
+        create_booking_tab()  # This function encapsulates the booking creation logic
+
+# Admin tab for adding new venues
+with tabs[1]:
     st.header('Add a New Venue')
     
-    # Use session state to hold form values to prevent them from resetting on reruns
+    # Session state to hold form values to prevent them from resetting on reruns
     if 'venue_name' not in st.session_state:
-        st.session_state['venue_name'] = ''
-        st.session_state['city'] = ''
-        st.session_state['capacity'] = 1
-        st.session_state['price_per_hour'] = 0
+        st.session_state.venue_name = ''
+        st.session_state.city = ''
+        st.session_state.capacity = 1
+        st.session_state.price_per_hour = 0
 
-    with st.form("form_add_venue"):
-        venue_name = st.text_input('Venue Name', value=st.session_state['venue_name'], key='venue_add')
-        city = st.text_input('City', value=st.session_state['city'], key='city_add')
-        capacity = st.number_input('Capacity', min_value=1, value=st.session_state['capacity'], key='capacity_add')
-        price_per_hour = st.number_input('Price Per Hour', min_value=0, value=st.session_state['price_per_hour'], key='price_add')
+    with st.form("add_venue_form"):
+        venue_name = st.text_input('Venue Name', value=st.session_state.venue_name, key='venue_name')
+        city = st.text_input('City', value=st.session_state.city, key='city')
+        capacity = st.number_input('Capacity', min_value=1, value=st.session_state.capacity, key='capacity')
+        price_per_hour = st.number_input('Price Per Hour', min_value=0, value=st.session_state.price_per_hour, key='price_per_hour')
         submit_button = st.form_submit_button('Add Venue')
 
         if submit_button:
-            # Call the add_venue function to try adding the venue
             add_venue(venue_name, city, capacity, price_per_hour)
-            # Reset the session state values if needed
-            st.session_state['venue_name'] = ''
-            st.session_state['city'] = ''
-            st.session_state['capacity'] = 1
-            st.session_state['price_per_hour'] = 0
+            st.session_state.venue_name = ''
+            st.session_state.city = ''
+            st.session_state.capacity = 1
+            st.session_state.price_per_hour = 0
