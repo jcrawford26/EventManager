@@ -225,47 +225,67 @@ def create_booking_tab():
             del st.session_state['create_enabled']
             del st.session_state['booking_details']
 
-def fetch_crm_data():
-    connections = connect_to_db()  # This should return a dictionary of connections for all databases
-    results = []
+def update_venue(venue_id, new_city=None, new_capacity=None, new_price_per_hour=None):
     try:
-        for db_name, connection in connections.items():
-            if connection:
-                with connection.cursor(pymysql.cursors.DictCursor) as cursor:
-                    cursor.execute("""
-                        SELECT 
-                            b.Client_name AS Name,
-                            COUNT(*) AS Booking_Count,
-                            SUM(v.Price_per_hour * TIMESTAMPDIFF(HOUR, b.Start_time, b.End_time)) AS Total_Spend,
-                            (SELECT v2.Name FROM Venues v2 
-                             JOIN VenueUsed vu ON v2.ID = vu.VenueID
-                             JOIN Bookings b2 ON vu.BookingID = b2.ID
-                             WHERE b2.Client_name = b.Client_name
-                             GROUP BY v2.Name
-                             ORDER BY COUNT(*) DESC
-                             LIMIT 1) AS Most_Frequent_Venue
-                        FROM 
-                            Bookings b
-                        JOIN 
-                            VenueUsed vu ON b.ID = vu.BookingID
-                        JOIN 
-                            Venues v ON vu.VenueID = v.ID
-                        GROUP BY 
-                            b.Client_name
-                    """)
-                    results.extend(cursor.fetchall())
+        # Fetch the venue first to determine which DB it belongs to
+        connection = connect_to_db()  # assuming this connects to a default or primary DB
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT Name FROM Venues WHERE ID = %s", (venue_id,))
+            venue = cursor.fetchone()
+            if venue:
+                db_name = choose_database(venue['Name'])
+                connection = connect_to_db(db_name)  # Connect to the appropriate DB
+                with connection.cursor() as cursor:
+                    updates = []
+                    parameters = []
+                    if new_city:
+                        updates.append("City = %s")
+                        parameters.append(new_city)
+                    if new_capacity:
+                        updates.append("Capacity = %s")
+                        parameters.append(new_capacity)
+                    if new_price_per_hour:
+                        updates.append("Price_per_hour = %s")
+                        parameters.append(new_price_per_hour)
+
+                    if updates:
+                        sql = "UPDATE Venues SET " + ", ".join(updates) + " WHERE ID = %s"
+                        parameters.append(venue_id)
+                        cursor.execute(sql, tuple(parameters))
+                        connection.commit()
+                        st.success(f"Venue '{venue['Name']}' updated successfully.")
+                    else:
+                        st.error("No updates provided.")
+            else:
+                st.error("Venue ID not found.")
     except Exception as e:
-        st.error(f"Failed to fetch CRM data across databases: {str(e)}")
+        st.error(f"An error occurred while updating the venue: {str(e)}")
     finally:
-        for connection in connections.values():
-            if connection:
-                connection.close()
+        if connection:
+            connection.close()
 
-    if results:
-        return pd.DataFrame(results)
-    else:
-        return pd.DataFrame()  # Return an empty DataFrame if there are issues or no data
-
+def delete_venue(venue_id):
+    try:
+        # Fetch the venue first to determine which DB it belongs to
+        connection = connect_to_db()  # assuming this connects to a default or primary DB
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT Name FROM Venues WHERE ID = %s", (venue_id,))
+            venue = cursor.fetchone()
+            if venue:
+                db_name = choose_database(venue['Name'])
+                connection = connect_to_db(db_name)  # Connect to the appropriate DB
+                with connection.cursor() as cursor:
+                    sql = "DELETE FROM Venues WHERE ID = %s"
+                    cursor.execute(sql, (venue_id,))
+                    connection.commit()
+                    st.success(f"Venue deleted successfully: {venue['Name']}")
+            else:
+                st.error("Venue ID not found.")
+    except Exception as e:
+        st.error(f"An error occurred while deleting the venue: {str(e)}")
+    finally:
+        if connection:
+            connection.close()
 
 def mass_add_venues(venues):
     """
@@ -351,27 +371,48 @@ with tab1:
 with tab2:
     st.header('Add a venue')
     
-    # Venue adding form under Admin
-    with st.form("form_add_venue"):
-        venue_name = st.text_input('Venue Name', key='venue_add')
-        city = st.text_input('City', key='city_add')
-        capacity = st.number_input('Capacity', min_value=1, key='capacity_add')
-        price_per_hour = st.number_input('Price Per Hour', min_value=0, key='price_add')
-        submit_button = st.form_submit_button('Add Venue')
-
-        if submit_button:
-            add_venue(venue_name, city, capacity, price_per_hour)
-
-        # SQL command execution section
-    st.subheader("Execute SQL Command (Update/Delete)")
-    with st.form("form_sql_command"):
-        sql_query = st.text_area('Enter SQL query:', height=150, key='sql_query')
-        execute_button = st.form_submit_button('Execute Query')
-
-        if execute_button:
-            results = execute_custom_query(sql_query)
-            for db_name, result in results.items():
-                if "successfully" in result:
-                    st.success(result)
+    # Admin tab in Streamlit
+    with st.sidebar:
+        admin_tab = st.selectbox('Choose Admin Action', ['Add Venue', 'Update Venue', 'Delete Venue'])
+    
+    if admin_tab == 'Add Venue':
+        st.header('Add a Venue')
+        with st.form("form_add_venue"):
+            venue_name = st.text_input('Venue Name', key='venue_add')
+            city = st.text_input('City', key='city_add')
+            capacity = st.number_input('Capacity', min_value=1, key='capacity_add')
+            price_per_hour = st.number_input('Price Per Hour', min_value=0.0, format='%f', key='price_add')
+            submit_button = st.form_submit_button('Add Venue')
+            if submit_button:
+                result = add_venue(venue_name, city, capacity, price_per_hour)
+                if result:
+                    st.success(f"Venue '{venue_name}' added successfully.")
                 else:
-                    st.error(result)
+                    st.error("Failed to add the venue.")
+    
+    elif admin_tab == 'Update Venue':
+        st.header('Update a Venue')
+        with st.form("form_update_venue"):
+            venue_id = st.number_input('Venue ID', min_value=1, key='venue_id_update')
+            new_city = st.text_input('New City (optional)', key='new_city')
+            new_capacity = st.number_input('New Capacity (optional)', min_value=1, format='%d', key='new_capacity', value=None)
+            new_price_per_hour = st.number_input('New Price Per Hour (optional)', min_value=0.0, format='%f', key='new_price', value=None)
+            update_button = st.form_submit_button('Update Venue')
+            if update_button:
+                result = update_venue(venue_id, new_city if new_city else None, new_capacity if new_capacity else None, new_price_per_hour if new_price_per_hour else None)
+                if result:
+                    st.success('Venue updated successfully.')
+                else:
+                    st.error("Failed to update the venue.")
+    
+    elif admin_tab == 'Delete Venue':
+        st.header('Delete a Venue')
+        with st.form("form_delete_venue"):
+            venue_id = st.number_input('Venue ID', min_value=1, key='venue_id_delete')
+            delete_button = st.form_submit_button('Delete Venue')
+            if delete_button:
+                result = delete_venue(venue_id)
+                if result:
+                    st.success(f'Venue with ID {venue_id} deleted successfully.')
+                else:
+                    st.error("Failed to delete the venue.")
