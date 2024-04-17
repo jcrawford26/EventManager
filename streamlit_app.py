@@ -330,7 +330,7 @@ with tab2:
 
 # Admin tab in Streamlit
 with tab3:
-    st.header('Admin Panel')
+    st.header('Add a venue')
     
     # Venue adding form under Admin
     with st.form("form_add_venue"):
