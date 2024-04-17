@@ -369,8 +369,6 @@ with tab1:
     
 # Admin tab in Streamlit
 with tab2:
-    st.header('Add a venue')
-    
     # Admin tab in Streamlit
     with st.sidebar:
         admin_tab = st.selectbox('Choose Admin Action', ['Add Venue', 'Update Venue', 'Delete Venue'])
