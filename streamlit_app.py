@@ -217,10 +217,9 @@ def create_booking_tab():
     # Proceed to confirm booking if available
     if st.session_state.get('create_enabled', False):
         client_name = st.text_input('Client Name', key='client_name_book')
-        if st.button('Confirm Booking'):
+        if st.button('Confirm Booking') and client_name:  # Ensure all fields are filled
             venue_name, date, formatted_start_time, formatted_end_time, total_cost = st.session_state['booking_details']
-            # st.write(f"Debug: Venue Name - '{venue_name}'")  # Debug print to check the actual venue name being used
-            create_booking(client_name, date, formatted_start_time, formatted_end_time, venue_name)
+            create_booking(client_name, date.strftime('%Y-%m-%d'), formatted_start_time, formatted_end_time, venue_name)
             st.write(f"The total cost of the booking was: ${total_cost:.2f}")
             del st.session_state['create_enabled']
             del st.session_state['booking_details']
