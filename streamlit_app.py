@@ -405,7 +405,3 @@ with tab2:
         delete_button = st.button('Delete Venue')
         if delete_button:
             result = delete_venue(selected_venue)
-            if result:
-                st.success(f'Venue "{selected_venue}" deleted successfully.')
-            else:
-                st.error("Failed to delete the venue.")
