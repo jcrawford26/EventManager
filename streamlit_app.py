@@ -370,16 +370,16 @@ with tab1:
 # Admin tab in Streamlit
 with tab2:
     # Admin tab in Streamlit
-    with st.sidebar:
-        admin_tab = st.selectbox('Choose Admin Action', ['Add Venue', 'Update Venue', 'Delete Venue'])
+    st.header('Admin Dashboard')
+    admin_action = st.selectbox('Choose Action', ['Add Venue', 'Update Venue', 'Delete Venue'])
     
-    if admin_tab == 'Add Venue':
-        st.header('Add a Venue')
+    if admin_action == 'Add Venue':
+        st.subheader('Add a Venue')
         with st.form("form_add_venue"):
-            venue_name = st.text_input('Venue Name', key='venue_add')
-            city = st.text_input('City', key='city_add')
-            capacity = st.number_input('Capacity', min_value=1, key='capacity_add')
-            price_per_hour = st.number_input('Price Per Hour', min_value=0.0, format='%f', key='price_add')
+            venue_name = st.text_input('Venue Name')
+            city = st.text_input('City')
+            capacity = st.number_input('Capacity', min_value=1)
+            price_per_hour = st.number_input('Price Per Hour', min_value=0.0, format='%f')
             submit_button = st.form_submit_button('Add Venue')
             if submit_button:
                 result = add_venue(venue_name, city, capacity, price_per_hour)
@@ -388,29 +388,30 @@ with tab2:
                 else:
                     st.error("Failed to add the venue.")
     
-    elif admin_tab == 'Update Venue':
-        st.header('Update a Venue')
+    elif admin_action == 'Update Venue':
+        st.subheader('Update a Venue')
+        venues = get_all_venues()
+        selected_venue = st.selectbox('Select a Venue to Update', venues)
         with st.form("form_update_venue"):
-            venue_id = st.number_input('Venue ID', min_value=1, key='venue_id_update')
-            new_city = st.text_input('New City (optional)', key='new_city')
-            new_capacity = st.number_input('New Capacity (optional)', min_value=1, format='%d', key='new_capacity', value=None)
-            new_price_per_hour = st.number_input('New Price Per Hour (optional)', min_value=0.0, format='%f', key='new_price', value=None)
+            new_city = st.text_input('New City (optional)')
+            new_capacity = st.number_input('New Capacity (optional)', min_value=1, format='%d', value=None)
+            new_price_per_hour = st.number_input('New Price Per Hour (optional)', min_value=0.0, format='%f', value=None)
             update_button = st.form_submit_button('Update Venue')
             if update_button:
-                result = update_venue(venue_id, new_city if new_city else None, new_capacity if new_capacity else None, new_price_per_hour if new_price_per_hour else None)
+                result = update_venue(selected_venue, new_city, new_capacity, new_price_per_hour)
                 if result:
                     st.success('Venue updated successfully.')
                 else:
                     st.error("Failed to update the venue.")
     
-    elif admin_tab == 'Delete Venue':
-        st.header('Delete a Venue')
-        with st.form("form_delete_venue"):
-            venue_id = st.number_input('Venue ID', min_value=1, key='venue_id_delete')
-            delete_button = st.form_submit_button('Delete Venue')
-            if delete_button:
-                result = delete_venue(venue_id)
-                if result:
-                    st.success(f'Venue with ID {venue_id} deleted successfully.')
-                else:
-                    st.error("Failed to delete the venue.")
+    elif admin_action == 'Delete Venue':
+        st.subheader('Delete a Venue')
+        venues = get_all_venues()
+        selected_venue = st.selectbox('Select a Venue to Delete', venues)
+        delete_button = st.button('Delete Venue')
+        if delete_button:
+            result = delete_venue(selected_venue)
+            if result:
+                st.success(f'Venue "{selected_venue}" deleted successfully.')
+            else:
+                st.error("Failed to delete the venue.")
