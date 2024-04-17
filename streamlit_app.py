@@ -225,91 +225,42 @@ def create_booking_tab():
             del st.session_state['create_enabled']
             del st.session_state['booking_details']
 
-def fetch_crm_data():
-    connections = connect_to_db()  # This should return a dictionary of connections for all databases
-    results = []
-    try:
-        for db_name, connection in connections.items():
-            if connection:
-                with connection.cursor(pymysql.cursors.DictCursor) as cursor:
-                    cursor.execute("""
-                        SELECT 
-                            b.Client_name AS Name,
-                            COUNT(*) AS Booking_Count,
-                            SUM(v.Price_per_hour * TIMESTAMPDIFF(HOUR, b.Start_time, b.End_time)) AS Total_Spend,
-                            (SELECT v2.Name FROM Venues v2 
-                             JOIN VenueUsed vu ON v2.ID = vu.VenueID
-                             JOIN Bookings b2 ON vu.BookingID = b2.ID
-                             WHERE b2.Client_name = b.Client_name
-                             GROUP BY v2.Name
-                             ORDER BY COUNT(*) DESC
-                             LIMIT 1) AS Most_Frequent_Venue
-                        FROM 
-                            Bookings b
-                        JOIN 
-                            VenueUsed vu ON b.ID = vu.BookingID
-                        JOIN 
-                            Venues v ON vu.VenueID = v.ID
-                        GROUP BY 
-                            b.Client_name
-                    """)
-                    results.extend(cursor.fetchall())
-    except Exception as e:
-        st.error(f"Failed to fetch CRM data across databases: {str(e)}")
-    finally:
-        for connection in connections.values():
-            if connection:
-                connection.close()
-
-    if results:
-        return pd.DataFrame(results)
-    else:
-        return pd.DataFrame()  # Return an empty DataFrame if there are issues or no data
-
-
-def mass_add_venues(venues):
-    """
-    Accepts a list of dictionaries, each representing a venue with keys:
-    'venue_name', 'city', 'capacity', 'price_per_hour'
-    """
-    # Group venues by target database based on the hash of the venue_name
-    db_venues = {'EventManager1': [], 'EventManager2': []}
-    for venue in venues:
-        db_name = choose_database(venue['venue_name'])
-        db_venues[db_name].append(venue)
-
-    # Connect to each database and perform the inserts
-    results = {}
-    for db_name, venues_list in db_venues.items():
-        if venues_list:  # Only connect if there are venues to add
-            connection = connect_to_db(db_name)
-            try:
-                with connection.cursor() as cursor:
-                    # Prepare batch insert query
-                    insert_query = "INSERT INTO Venues (Name, City, Capacity, Price_per_hour) VALUES (%s, %s, %s, %s)"
-                    # Prepare values to be inserted
-                    insert_values = [(v['venue_name'], v['city'], v['capacity'], v['price_per_hour']) for v in venues_list]
-                    # Execute the batch insertion
-                    cursor.executemany(insert_query, insert_values)
-                    connection.commit()
-                    results[db_name] = f"{len(venues_list)} venues added successfully to {db_name}."
-            except Exception as e:
-                results[db_name] = f"Failed to add venues to {db_name}: {str(e)}"
-            finally:
-                if connection:
-                    connection.close()
-
 
 # Streamlit user interface for the application
 st.title('EventManager - Venue Booking Management System')
 
-# Using tabs for better organization
-tab1, tab2, tab3, tab4 = st.tabs(["Add Venue", "Find Venue", "Create Booking", "Admin"])
+# Define two main tabs: User and Admin
+user_tab, admin_tab = st.tabs(["User", "Admin"])
 
-with tab1:
-    # Header for the form
+# In the User tab, we will have sub-tabs for Find Venue and Create Booking
+with user_tab:
+    find_venue_tab, create_booking_tab = st.tabs(["Find Venue", "Create Booking"])
+    
+    with find_venue_tab:
+        st.header('Find a Venue')
+        cities = get_cities()  # Fetch list of cities from the databases
+        
+        with st.form("form_find_venue"):
+            search_keyword = st.text_input('Keyword', key='keyword_find')
+            location = st.selectbox('City', ['All'] + cities, key='location_find')
+            search_button = st.form_submit_button('Search Venues')
+
+            if search_button:
+                results = find_venue(search_keyword, location)
+                if not results.empty:
+                    st.dataframe(results)
+                else:
+                    st.info('No venues found matching the search criteria.')
+    
+    with create_booking_tab:
+        st.header('Create a Booking')
+        # Your existing create_booking_tab function logic here.
+        create_booking_tab()  # Call the create booking tab logic to handle bookings.
+
+# In the Admin tab, include functionality to add venues
+with admin_tab:
     st.header('Add a New Venue')
-
+    
     # Use session state to hold form values to prevent them from resetting on reruns
     if 'venue_name' not in st.session_state:
         st.session_state['venue_name'] = ''
@@ -317,7 +268,6 @@ with tab1:
         st.session_state['capacity'] = 1
         st.session_state['price_per_hour'] = 0
 
-    # Create the form for adding a new venue
     with st.form("form_add_venue"):
         venue_name = st.text_input('Venue Name', value=st.session_state['venue_name'], key='venue_add')
         city = st.text_input('City', value=st.session_state['city'], key='city_add')
@@ -325,45 +275,11 @@ with tab1:
         price_per_hour = st.number_input('Price Per Hour', min_value=0, value=st.session_state['price_per_hour'], key='price_add')
         submit_button = st.form_submit_button('Add Venue')
 
-    # Check if the submit button was pressed
-    if submit_button:
-        # Call the add_venue function to try adding the venue
-        venue_added = add_venue(venue_name, city, capacity, price_per_hour)
-
-        # If the venue was successfully added, reset the session state values
-        if venue_added:
+        if submit_button:
+            # Call the add_venue function to try adding the venue
+            add_venue(venue_name, city, capacity, price_per_hour)
+            # Reset the session state values if needed
             st.session_state['venue_name'] = ''
             st.session_state['city'] = ''
             st.session_state['capacity'] = 1
             st.session_state['price_per_hour'] = 0
-        else:
-            # If there was a duplicate or error, keep the current input for the user to adjust
-            st.session_state['venue_name'] = venue_name
-            st.session_state['city'] = city
-            st.session_state['capacity'] = capacity
-            st.session_state['price_per_hour'] = price_per_hour
-
-# find venue
-with tab2:
-    st.header('Find a Venue')
-    
-    cities = get_cities()  # Fetch list of cities from the databases
-
-    with st.form("form_find_venue"):
-        search_keyword = st.text_input('Keyword', key='keyword_find')
-        location = st.selectbox('City', ['All'] + cities, key='location_find')
-        search_button = st.form_submit_button('Search Venues')
-
-        if search_button:
-            results = find_venue(search_keyword, location)
-            if not results.empty:
-                st.dataframe(results)
-            else:
-                st.info('No venues found matching the search criteria.')
-
-# Create Booking tab in Streamlit
-with tab3:
-    create_booking_tab()
-
-with tab4:
-    st.header("Title")
