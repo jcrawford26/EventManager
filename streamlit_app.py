@@ -263,23 +263,22 @@ def update_venue(venue_name, new_city=None, new_capacity=None, new_price_per_hou
         if connection:
             connection.close()
 
-def delete_venue(venue_id):
+def delete_venue(venue_name):
     try:
-        # Fetch the venue first to determine which DB it belongs to
-        connection = connect_to_db()  # assuming this connects to a default or primary DB
+        # Determine which DB the venue belongs to using the venue name
+        db_name = choose_database(venue_name)
+        connection = connect_to_db(db_name)  # Connect to the appropriate DB
         with connection.cursor() as cursor:
-            cursor.execute("SELECT Name FROM Venues WHERE ID = %s", (venue_id,))
+            # Make sure the venue exists before attempting to delete
+            cursor.execute("SELECT ID FROM Venues WHERE Name = %s", (venue_name,))
             venue = cursor.fetchone()
             if venue:
-                db_name = choose_database(venue['Name'])
-                connection = connect_to_db(db_name)  # Connect to the appropriate DB
-                with connection.cursor() as cursor:
-                    sql = "DELETE FROM Venues WHERE ID = %s"
-                    cursor.execute(sql, (venue_id,))
-                    connection.commit()
-                    st.success(f"Venue deleted successfully: {venue['Name']}")
+                sql = "DELETE FROM Venues WHERE Name = %s"
+                cursor.execute(sql, (venue_name,))
+                connection.commit()
+                st.success(f"Venue '{venue_name}' deleted successfully.")
             else:
-                st.error("Venue ID not found.")
+                st.error("Venue not found.")
     except Exception as e:
         st.error(f"An error occurred while deleting the venue: {str(e)}")
     finally:
