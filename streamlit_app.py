@@ -271,7 +271,7 @@ def fetch_crm_data():
 st.title('EventManager - Venue Booking Management System')
 
 # Using tabs for better organization
-tab1, tab2, tab3, tab4 = st.tabs(["Add Venue", "Find Venue", "Create Booking", "CRM"])
+tab1, tab2, tab3, tab4 = st.tabs(["Add Venue", "Find Venue", "Create Booking", "Admin"])
 
 with tab1:
     # Header for the form
@@ -333,9 +333,4 @@ with tab3:
     create_booking_tab()
 
 with tab4:
-    st.header("Customer Relationship Management")
-    crm_data = fetch_crm_data()
-    if not crm_data.empty:
-        st.dataframe(crm_data)
-    else:
-        st.write("No CRM data available.")
+    # Matt fill in here
