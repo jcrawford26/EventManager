@@ -300,26 +300,6 @@ def mass_add_venues(venues):
                     connection.close()
 
 
-def execute_custom_query(sql_query):
-    db_keys = ['EventManager1', 'EventManager2']  # The keys for both databases
-    results = {}
-
-    for db_name in db_keys:
-        connection = connect_to_db(db_name)
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute(sql_query)
-                connection.commit()
-                results[db_name] = f"Query executed successfully on {db_name}."
-        except Exception as e:
-            results[db_name] = f"An error occurred on {db_name}: {str(e)}"
-        finally:
-            if connection:
-                connection.close()
-
-    return results
-
-
 # Streamlit user interface for the application
 st.title('EventManager - Venue Booking Management System')
 
@@ -363,19 +343,5 @@ with tab3:
 
         if submit_button:
             add_venue(venue_name, city, capacity, price_per_hour)
-
-        # SQL command execution section
-    st.subheader("Execute SQL Command (Update/Delete)")
-    with st.form("form_sql_command"):
-        sql_query = st.text_area('Enter SQL query:', height=150, key='sql_query')
-        execute_button = st.form_submit_button('Execute Query')
-
-        if execute_button:
-            results = execute_custom_query(sql_query)
-            for db_name, result in results.items():
-                if "successfully" in result:
-                    st.success(result)
-                else:
-                    st.error(result)
 
     # Additional administrative functionalities here
