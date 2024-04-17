@@ -382,23 +382,22 @@ with tab2:
             if submit_button:
                 result = add_venue(venue_name, city, capacity, price_per_hour)
     
-        st.subheader('Bulk Upload Venues from a CSV File')
-        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-        if uploaded_file is not None:
-            try:
-                # Attempt to read the CSV file with explicit headers
-                data = pd.read_csv(uploaded_file, header=0)
-                # Check if all expected columns are in the DataFrame
-                expected_columns = {'Name', 'City', 'Capacity', 'Price_per_hour'}
-                if not expected_columns <= set(data.columns):
-                    missing = expected_columns - set(data.columns)
-                    st.error(f"Missing columns in CSV file: {missing}")
-                else:
-                    for index, row in data.iterrows():
-                        add_venue(row['Name'], row['City'], row['Capacity'], row['Price_per_hour'])
-                    st.success("All venues added successfully.")
-            except Exception as e:
-                st.error(f"An error occurred: {str(e)}")
+    st.subheader('Bulk Upload Venues from a CSV File')
+    uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+    if uploaded_file is not None:
+        try:
+            # Attempt to read the CSV file with explicit header check
+            data = pd.read_csv(uploaded_file)
+            expected_columns = {'Name', 'City', 'Capacity', 'Price_per_hour'}
+            if not expected_columns.issubset(data.columns):
+                missing = expected_columns - set(data.columns)
+                st.error(f"Missing columns in CSV file: {missing}")
+            else:
+                for index, row in data.iterrows():
+                    add_venue(row['Name'], row['City'], row['Capacity'], row['Price_per_hour'])
+                st.success("All venues added successfully.")
+        except Exception as e:
+            st.error(f"An error occurred while reading or processing the CSV file: {str(e)}")
     
     elif admin_action == 'Update Venue':
         st.subheader('Update a Venue')
