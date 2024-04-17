@@ -304,47 +304,10 @@ def mass_add_venues(venues):
 st.title('EventManager - Venue Booking Management System')
 
 # Using tabs for better organization
-tab1, tab2, tab3, tab4 = st.tabs(["Add Venue", "Find Venue", "Create Booking", "Admin"])
-
-with tab1:
-    # Header for the form
-    st.header('Add a New Venue')
-
-    # Use session state to hold form values to prevent them from resetting on reruns
-    if 'venue_name' not in st.session_state:
-        st.session_state['venue_name'] = ''
-        st.session_state['city'] = ''
-        st.session_state['capacity'] = 1
-        st.session_state['price_per_hour'] = 0
-
-    # Create the form for adding a new venue
-    with st.form("form_add_venue"):
-        venue_name = st.text_input('Venue Name', value=st.session_state['venue_name'], key='venue_add')
-        city = st.text_input('City', value=st.session_state['city'], key='city_add')
-        capacity = st.number_input('Capacity', min_value=1, value=st.session_state['capacity'], key='capacity_add')
-        price_per_hour = st.number_input('Price Per Hour', min_value=0, value=st.session_state['price_per_hour'], key='price_add')
-        submit_button = st.form_submit_button('Add Venue')
-
-    # Check if the submit button was pressed
-    if submit_button:
-        # Call the add_venue function to try adding the venue
-        venue_added = add_venue(venue_name, city, capacity, price_per_hour)
-
-        # If the venue was successfully added, reset the session state values
-        if venue_added:
-            st.session_state['venue_name'] = ''
-            st.session_state['city'] = ''
-            st.session_state['capacity'] = 1
-            st.session_state['price_per_hour'] = 0
-        else:
-            # If there was a duplicate or error, keep the current input for the user to adjust
-            st.session_state['venue_name'] = venue_name
-            st.session_state['city'] = city
-            st.session_state['capacity'] = capacity
-            st.session_state['price_per_hour'] = price_per_hour
+tab1, tab2, tab3 = st.tabs(["Find Venue", "Create Booking", "Admin"])
 
 # find venue
-with tab2:
+with tab1:
     st.header('Find a Venue')
     
     cities = get_cities()  # Fetch list of cities from the databases
@@ -362,8 +325,22 @@ with tab2:
                 st.info('No venues found matching the search criteria.')
 
 # Create Booking tab in Streamlit
-with tab3:
+with tab2:
     create_booking_tab()
 
-with tab4:
-    st.header("Title")
+# Admin tab in Streamlit
+with tab3:
+    st.header('Add a venue')
+    
+    # Venue adding form under Admin
+    with st.form("form_add_venue"):
+        venue_name = st.text_input('Venue Name', key='venue_add')
+        city = st.text_input('City', key='city_add')
+        capacity = st.number_input('Capacity', min_value=1, key='capacity_add')
+        price_per_hour = st.number_input('Price Per Hour', min_value=0, key='price_add')
+        submit_button = st.form_submit_button('Add Venue')
+
+        if submit_button:
+            add_venue(venue_name, city, capacity, price_per_hour)
+
+    # Additional administrative functionalities here
