@@ -386,6 +386,7 @@ with tab2:
         uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
         if uploaded_file is not None:
             data = pd.read_csv(uploaded_file)
+            st.write(data)
             try:
                 for index, row in data.iterrows():
                     add_venue(row['Name'], row['City'], row['Capacity'], row['Price_per_hour'])
