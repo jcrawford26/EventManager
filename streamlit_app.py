@@ -333,6 +333,5 @@ with tab3:
 
 with tab4:
     st.header("Title")
-    add_venue()
 
 
