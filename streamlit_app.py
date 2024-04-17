@@ -225,39 +225,38 @@ def create_booking_tab():
             del st.session_state['create_enabled']
             del st.session_state['booking_details']
 
-def update_venue(venue_id, new_city=None, new_capacity=None, new_price_per_hour=None):
+def update_venue(venue_name, new_city=None, new_capacity=None, new_price_per_hour=None):
     try:
-        # Fetch the venue first to determine which DB it belongs to
-        connection = connect_to_db()  # assuming this connects to a default or primary DB
+        # Determine which DB the venue belongs to
+        db_name = choose_database(venue_name)
+        connection = connect_to_db(db_name)  # Connect to the appropriate DB
         with connection.cursor() as cursor:
-            cursor.execute("SELECT Name FROM Venues WHERE ID = %s", (venue_id,))
+            # Fetch the venue first to make sure it exists
+            cursor.execute("SELECT ID FROM Venues WHERE Name = %s", (venue_name,))
             venue = cursor.fetchone()
             if venue:
-                db_name = choose_database(venue['Name'])
-                connection = connect_to_db(db_name)  # Connect to the appropriate DB
-                with connection.cursor() as cursor:
-                    updates = []
-                    parameters = []
-                    if new_city:
-                        updates.append("City = %s")
-                        parameters.append(new_city)
-                    if new_capacity:
-                        updates.append("Capacity = %s")
-                        parameters.append(new_capacity)
-                    if new_price_per_hour:
-                        updates.append("Price_per_hour = %s")
-                        parameters.append(new_price_per_hour)
+                updates = []
+                parameters = []
+                if new_city:
+                    updates.append("City = %s")
+                    parameters.append(new_city)
+                if new_capacity:
+                    updates.append("Capacity = %s")
+                    parameters.append(new_capacity)
+                if new_price_per_hour:
+                    updates.append("Price_per_hour = %s")
+                    parameters.append(new_price_per_hour)
 
-                    if updates:
-                        sql = "UPDATE Venues SET " + ", ".join(updates) + " WHERE ID = %s"
-                        parameters.append(venue_id)
-                        cursor.execute(sql, tuple(parameters))
-                        connection.commit()
-                        st.success(f"Venue '{venue['Name']}' updated successfully.")
-                    else:
-                        st.error("No updates provided.")
+                if updates:
+                    sql = "UPDATE Venues SET " + ", ".join(updates) + " WHERE Name = %s"
+                    parameters.append(venue_name)
+                    cursor.execute(sql, parameters)
+                    connection.commit()
+                    st.success(f"Venue '{venue_name}' updated successfully.")
+                else:
+                    st.error("No updates provided.")
             else:
-                st.error("Venue ID not found.")
+                st.error("Venue not found.")
     except Exception as e:
         st.error(f"An error occurred while updating the venue: {str(e)}")
     finally:
