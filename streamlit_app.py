@@ -225,47 +225,6 @@ def create_booking_tab():
             del st.session_state['create_enabled']
             del st.session_state['booking_details']
 
-def fetch_crm_data():
-    connections = connect_to_db()  # This should return a dictionary of connections for all databases
-    results = []
-    try:
-        for db_name, connection in connections.items():
-            if connection:
-                with connection.cursor(pymysql.cursors.DictCursor) as cursor:
-                    cursor.execute("""
-                        SELECT 
-                            b.Client_name AS Name,
-                            COUNT(*) AS Booking_Count,
-                            SUM(v.Price_per_hour * TIMESTAMPDIFF(HOUR, b.Start_time, b.End_time)) AS Total_Spend,
-                            (SELECT v2.Name FROM Venues v2 
-                             JOIN VenueUsed vu ON v2.ID = vu.VenueID
-                             JOIN Bookings b2 ON vu.BookingID = b2.ID
-                             WHERE b2.Client_name = b.Client_name
-                             GROUP BY v2.Name
-                             ORDER BY COUNT(*) DESC
-                             LIMIT 1) AS Most_Frequent_Venue
-                        FROM 
-                            Bookings b
-                        JOIN 
-                            VenueUsed vu ON b.ID = vu.BookingID
-                        JOIN 
-                            Venues v ON vu.VenueID = v.ID
-                        GROUP BY 
-                            b.Client_name
-                    """)
-                    results.extend(cursor.fetchall())
-    except Exception as e:
-        st.error(f"Failed to fetch CRM data across databases: {str(e)}")
-    finally:
-        for connection in connections.values():
-            if connection:
-                connection.close()
-
-    if results:
-        return pd.DataFrame(results)
-    else:
-        return pd.DataFrame()  # Return an empty DataFrame if there are issues or no data
-
 # Streamlit user interface for the application
 st.title('EventManager - Venue Booking Management System')
 
