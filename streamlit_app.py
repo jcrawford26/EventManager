@@ -83,15 +83,15 @@ def create_booking(client_name, date, start_time, end_time, venue_name):
         if connection:
             connection.close()
 
-def find_venue(search_keyword, city, max_capacity):
+def find_venue(search_keyword, city):
     connections = connect_to_db()  # Gets connections for both databases
     results = []
     try:
         for db_name, connection in connections.items():
             if connection:
                 with connection.cursor() as cursor:
-                    query = "SELECT Name, City, Capacity, Price_per_hour FROM Venues WHERE Name LIKE %s AND Capacity <= %s"
-                    params = ['%' + search_keyword + '%', max_capacity]
+                    query = "SELECT Name, City, Capacity, Price_per_hour FROM Venues WHERE Name LIKE %s"
+                    params = ['%' + search_keyword + '%']
 
                     if city and city != 'All':
                         query += " AND City = %s"
@@ -315,11 +315,10 @@ with tab1:
     with st.form("form_find_venue"):
         search_keyword = st.text_input('Keyword', key='keyword_find')
         location = st.selectbox('City', ['All'] + cities, key='location_find')
-        max_capacity = st.number_input('Maximum Capacity', min_value=1, value=100, step=1, key='max_capacity_find')  # Allow users to specify max capacity
         search_button = st.form_submit_button('Search Venues')
 
         if search_button:
-            results = find_venue(search_keyword, location, max_capacity)
+            results = find_venue(search_keyword, location)
             if not results.empty:
                 st.dataframe(results)
             else:
