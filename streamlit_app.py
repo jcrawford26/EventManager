@@ -293,7 +293,7 @@ with user_tab:
                     st.info('No venues found matching the search criteria.')
 
     with create_booking_tab:
-        create_booking()  # Your existing function to handle booking creation.
+        create_booking_tab()  # Your existing function to handle booking creation.
 
 with admin_tab:
     st.header('Add a New Venue')
