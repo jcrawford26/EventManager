@@ -347,7 +347,8 @@ with tab1:
 
 # Create Booking tab in Streamlit
 with tab2:
-
+    st.header("Create a booking")
+    
 # Admin tab in Streamlit
 with tab3:
     st.header('Add a venue')
