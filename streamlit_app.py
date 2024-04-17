@@ -398,10 +398,6 @@ with tab2:
             update_button = st.form_submit_button('Update Venue')
             if update_button:
                 result = update_venue(selected_venue, new_city, new_capacity, new_price_per_hour)
-                if result:
-                    st.success('Venue updated successfully.')
-                else:
-                    st.error("Failed to update the venue.")
     
     elif admin_action == 'Delete Venue':
         st.subheader('Delete a Venue')
