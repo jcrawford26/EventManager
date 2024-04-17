@@ -381,10 +381,6 @@ with tab2:
             submit_button = st.form_submit_button('Add Venue')
             if submit_button:
                 result = add_venue(venue_name, city, capacity, price_per_hour)
-                if result:
-                    st.success(f"Venue '{venue_name}' added successfully.")
-                else:
-                    st.error("Failed to add the venue.")
     
     elif admin_action == 'Update Venue':
         st.subheader('Update a Venue')
