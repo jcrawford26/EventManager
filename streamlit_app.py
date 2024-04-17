@@ -386,8 +386,8 @@ with tab2:
     uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
     if uploaded_file is not None:
         try:
-            # Attempt to read the CSV file with explicit header check
-            data = pd.read_csv(uploaded_file)
+            # Read the CSV file with explicit utf-8 encoding
+            data = pd.read_csv(uploaded_file, encoding='utf-8')
             expected_columns = {'Name', 'City', 'Capacity', 'Price_per_hour'}
             if not expected_columns.issubset(data.columns):
                 missing = expected_columns - set(data.columns)
