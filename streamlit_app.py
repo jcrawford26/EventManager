@@ -266,40 +266,6 @@ def fetch_crm_data():
     else:
         return pd.DataFrame()  # Return an empty DataFrame if there are issues or no data
 
-
-def mass_add_venues(venues):
-    """
-    Accepts a list of dictionaries, each representing a venue with keys:
-    'venue_name', 'city', 'capacity', 'price_per_hour'
-    """
-    # Group venues by target database based on the hash of the venue_name
-    db_venues = {'EventManager1': [], 'EventManager2': []}
-    for venue in venues:
-        db_name = choose_database(venue['venue_name'])
-        db_venues[db_name].append(venue)
-
-    # Connect to each database and perform the inserts
-    results = {}
-    for db_name, venues_list in db_venues.items():
-        if venues_list:  # Only connect if there are venues to add
-            connection = connect_to_db(db_name)
-            try:
-                with connection.cursor() as cursor:
-                    # Prepare batch insert query
-                    insert_query = "INSERT INTO Venues (Name, City, Capacity, Price_per_hour) VALUES (%s, %s, %s, %s)"
-                    # Prepare values to be inserted
-                    insert_values = [(v['venue_name'], v['city'], v['capacity'], v['price_per_hour']) for v in venues_list]
-                    # Execute the batch insertion
-                    cursor.executemany(insert_query, insert_values)
-                    connection.commit()
-                    results[db_name] = f"{len(venues_list)} venues added successfully to {db_name}."
-            except Exception as e:
-                results[db_name] = f"Failed to add venues to {db_name}: {str(e)}"
-            finally:
-                if connection:
-                    connection.close()
-
-
 # Streamlit user interface for the application
 st.title('EventManager - Venue Booking Management System')
 
@@ -367,5 +333,6 @@ with tab3:
 
 with tab4:
     st.header("Title")
+    add_venue()
 
 
