@@ -385,11 +385,18 @@ with tab2:
         st.subheader('Bulk Upload Venues from a CSV File')
         uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
         if uploaded_file is not None:
-            data = pd.read_csv(uploaded_file)
-            st.write(data)
             try:
-                for index, row in data.iterrows():
-                    add_venue(row['Name'], row['City'], row['Capacity'], row['Price_per_hour'])
+                # Attempt to read the CSV file with explicit headers
+                data = pd.read_csv(uploaded_file, header=0)
+                # Check if all expected columns are in the DataFrame
+                expected_columns = {'Name', 'City', 'Capacity', 'Price_per_hour'}
+                if not expected_columns <= set(data.columns):
+                    missing = expected_columns - set(data.columns)
+                    st.error(f"Missing columns in CSV file: {missing}")
+                else:
+                    for index, row in data.iterrows():
+                        add_venue(row['Name'], row['City'], row['Capacity'], row['Price_per_hour'])
+                    st.success("All venues added successfully.")
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
     
