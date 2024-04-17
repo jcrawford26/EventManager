@@ -389,6 +389,8 @@ with tab2:
             try:
                 for index, row in data.iterrows():
                     add_venue(row['Name'], row['City'], row['Capacity'], row['Price_per_hour'])
+            except Exception as e:
+                st.error(f"An error occurred: {str(e)}")
     
     elif admin_action == 'Update Venue':
         st.subheader('Update a Venue')
