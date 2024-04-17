@@ -372,15 +372,23 @@ with tab2:
     admin_action = st.selectbox('Choose Action', ['Add Venue', 'Update Venue', 'Delete Venue'])
     
     if admin_action == 'Add Venue':
-        st.subheader('Add a Venue')
+        st.subheader('Add a Venue Manually')
         with st.form("form_add_venue"):
-            venue_name = st.text_input('Venue Name')
-            city = st.text_input('City')
-            capacity = st.number_input('Capacity', min_value=1)
-            price_per_hour = st.number_input('Price Per Hour', min_value=0.0, format='%f')
+            venue_name = st.text_input('Venue Name', key='venue_add')
+            city = st.text_input('City', key='city_add')
+            capacity = st.number_input('Capacity', min_value=1, key='capacity_add')
+            price_per_hour = st.number_input('Price Per Hour', min_value=0.0, format='%f', key='price_add')
             submit_button = st.form_submit_button('Add Venue')
             if submit_button:
                 result = add_venue(venue_name, city, capacity, price_per_hour)
+    
+        st.subheader('Bulk Upload Venues from a CSV File')
+        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+        if uploaded_file is not None:
+            data = pd.read_csv(uploaded_file)
+            try:
+                for index, row in data.iterrows():
+                    add_venue(row['Name'], row['City'], row['Capacity'], row['Price_per_hour'])
     
     elif admin_action == 'Update Venue':
         st.subheader('Update a Venue')
