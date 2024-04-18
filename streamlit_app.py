@@ -372,7 +372,7 @@ with tab2:
     admin_action = st.selectbox('Choose Action', ['Add Venue', 'Update Venue', 'Delete Venue'])
     
     if admin_action == 'Add Venue':
-        st.subheader('Add a Venue Manually')
+        st.subheader('Add a Venue')
         with st.form("form_add_venue"):
             venue_name = st.text_input('Venue Name', key='venue_add')
             city = st.text_input('City', key='city_add')
