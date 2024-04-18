@@ -382,23 +382,6 @@ with tab2:
             if submit_button:
                 result = add_venue(venue_name, city, capacity, price_per_hour)
     
-    st.subheader('Bulk Upload Venues from a CSV File')
-    uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-    if uploaded_file is not None:
-        try:
-            # Try reading with different delimiters if commas don't work
-            data = pd.read_csv(uploaded_file, delimiter=',', encoding='utf-8', skipinitialspace=True)
-            expected_columns = {'Name', 'City', 'Capacity', 'Price_per_hour'}
-            if not expected_columns.issubset(data.columns):
-                missing = expected_columns - set(data.columns)
-                st.error(f"Missing or incorrect columns in CSV file: {missing}")
-            else:
-                for index, row in data.iterrows():
-                    add_venue(row['Name'], row['City'], row['Capacity'], row['Price_per_hour'])
-                st.success("All venues added successfully.")
-        except Exception as e:
-            st.error(f"An error occurred while reading or processing the CSV file: {str(e)}")
-    
     elif admin_action == 'Update Venue':
         st.subheader('Update a Venue')
         venues = get_all_venues()
