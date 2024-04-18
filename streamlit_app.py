@@ -359,8 +359,6 @@ with tab1:
             results = find_venue(search_keyword, location)
             if not results.empty:
                 st.dataframe(results)
-            else:
-                st.info('No venues found matching the search criteria.')
     
     create_booking_tab()
 
