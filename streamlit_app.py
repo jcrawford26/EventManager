@@ -386,12 +386,12 @@ with tab2:
     uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
     if uploaded_file is not None:
         try:
-            # Read the CSV file with explicit utf-8 encoding
-            data = pd.read_csv(uploaded_file, encoding='utf-8')
+            # Try reading with different delimiters if commas don't work
+            data = pd.read_csv(uploaded_file, delimiter=',', encoding='utf-8', skipinitialspace=True)
             expected_columns = {'Name', 'City', 'Capacity', 'Price_per_hour'}
             if not expected_columns.issubset(data.columns):
                 missing = expected_columns - set(data.columns)
-                st.error(f"Missing columns in CSV file: {missing}")
+                st.error(f"Missing or incorrect columns in CSV file: {missing}")
             else:
                 for index, row in data.iterrows():
                     add_venue(row['Name'], row['City'], row['Capacity'], row['Price_per_hour'])
