@@ -1,6 +1,6 @@
 # dsci551_project
 
-Before calling create tables, make sure you grant all privileges to local host and then flush privileges.
+Before calling ```create_tables.py```, make sure you grant all privileges to local host and then flush privileges.
 
 **Create Tables**: ```python3 create_tables.py```
 
