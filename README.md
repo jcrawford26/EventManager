@@ -15,7 +15,7 @@
 
 ## Command Line Usage:
 
-### 1. Login to EC2 Instance and use sftp to transfer ```put filename``` necessary files to EC2. Then,
+### 1. Login to EC2 Instance and use sftp to transfer put necessary files to EC2. Then,
 
     Start your MySQL server: sudo service mysql start
 
@@ -31,6 +31,8 @@ FLUSH PRIVILEGES;
    **Add Venue**: ```python3 add_venue.py 'venue_name' 'city' 'capacity' 'price_per_hour'```
    
    **Create Booking**: ```python3 create_booking.py 'client_name' 'date' 'start_time' 'end_time' 'venue_name'```
+
+   Test by logging into MySQL: ```mysql -u root -p``` and enter password
 
 ### 4. Launch Streamlit App
 
