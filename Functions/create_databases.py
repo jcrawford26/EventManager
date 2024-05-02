@@ -22,7 +22,6 @@ def create_databases():
             for database in databases:
                 cursor.execute(f"CREATE DATABASE IF NOT EXISTS {database}")
                 print(f"Database {database} created or already exists.")
-        connection.close()
 
     except OperationalError as e:
         print(f"An error occurred: {e}")
