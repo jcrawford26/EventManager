@@ -5,19 +5,12 @@ File Structure:
 main:
 
 |-- README.md
-
 |-- requirements.txt
-
 |-- streamlit_app.py
-
 |-- Functions
-
 |---- add_venue.py
-
 |---- create_booking.py
-
 |---- create_databases.py
-
 |---- create_tables.py
 
 
