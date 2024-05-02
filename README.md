@@ -17,7 +17,7 @@
 
 ### 1. Login to EC2 Instance and use sftp to transfer put necessary files to EC2. Then,
 
-    Start your MySQL server: sudo service mysql start
+    Start MySQL server: sudo service mysql start
 
 ### 2. Before calling ```create_tables.py```, make sure to grant all privileges to local host and then flush privileges.
 ```
