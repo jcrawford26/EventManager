@@ -15,7 +15,7 @@
 
 ## Command Line Usage:
 
-### 1. Login to EC2 Instance and use sftp to transfer (put 'filename') necessary files to EC2.
+### 1. Login to EC2 Instance and use sftp to transfer ```put filename``` necessary files to EC2. Then,
 
     Start your MySQL server: sudo service mysql start
 
