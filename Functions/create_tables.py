@@ -1,5 +1,3 @@
-# IMPORT LIBRARIES
-import sys
 import pymysql
 from pymysql.err import OperationalError
 
@@ -53,11 +51,20 @@ create_tables_queries = [
     """
 ]
 
-
-# Function to execute creation queries on a database
 def create_tables_in_database(connection_params):
     try:
-        # Establishing a connection to the database
+        # Connect without specifying a database to allow creation if it does not exist
+        initial_connection = pymysql.connect(host=connection_params['host'],
+                                             user=connection_params['user'],
+                                             password=connection_params['password'],
+                                             cursorclass=pymysql.cursors.DictCursor)
+        with initial_connection.cursor() as cursor:
+            # Create database if it does not exist
+            cursor.execute(f"CREATE DATABASE IF NOT EXISTS {connection_params['database']}")
+            print(f"Database {connection_params['database']} created or already exists.")
+        initial_connection.close()
+
+        # Establish a new connection to the newly created or existing database
         connection = pymysql.connect(host=connection_params['host'],
                                      user=connection_params['user'],
                                      password=connection_params['password'],
@@ -73,12 +80,11 @@ def create_tables_in_database(connection_params):
             connection.commit()
 
     except OperationalError as e:
-        print(f"An error occurred while connecting to {connection_params['database']}: {e}")
+        print(f"An error occurred while connecting or operating on {connection_params['database']}: {e}")
     finally:
         if connection:
             connection.close()
             print(f"Connection to {connection_params['database']} closed.")
-
 
 # Iterating through each database to create tables
 for params in connections_params:
