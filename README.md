@@ -14,7 +14,15 @@ main:
 
 Command Line Usage:
 
-Before calling ```create_tables.py```, make sure you grant all privileges to local host and then flush privileges.
+Login to EC2 Instance and use sftp to transfer (put 'filename') necessary files to EC2.
+
+Start your MySQL server: ```suduo service mysql start```
+
+Before calling ```create_tables.py```, make sure to grant all privileges to local host and then flush privileges.
+```
+GRANT ALL PRIVILEGES ON *.* TO 'username'@'hostname';
+FLUSH PRIVILEGES;
+```
 
 **Create Tables**: ```python3 create_tables.py```
 
