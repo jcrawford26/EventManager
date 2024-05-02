@@ -1,6 +1,6 @@
 # dsci551_project
 
-**File Structure**:
+## File Structure:
 - README.md
 - requirements.txt
 - streamlit_app.py
@@ -17,11 +17,11 @@
 
 ### 1. Login to EC2 Instance and use sftp to transfer (put 'filename') necessary files to EC2.
 
-    **Start your MySQL server**: ```suduo service mysql start```
+    Start your MySQL server: sudo service mysql start
 
 ### 2. Before calling ```create_tables.py```, make sure to grant all privileges to local host and then flush privileges.
 ```
-GRANT ALL PRIVILEGES ON *.* TO 'username'@'hostname';
+GRANT ALL PRIVILEGES ON database_name.* TO 'username'@'hostname';
 FLUSH PRIVILEGES;
 ```
 ### 3. Use Functions
