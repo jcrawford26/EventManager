@@ -1,7 +1,5 @@
 # dsci551_project
 
-File Structure:
-
 main:
 
 - README.md
@@ -12,7 +10,9 @@ main:
   - create_booking.py
   - create_databases.py
   - create_tables.py
+ 
 
+Command Line Usage:
 
 Before calling ```create_tables.py```, make sure you grant all privileges to local host and then flush privileges.
 
